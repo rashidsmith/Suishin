@@ -53,6 +53,10 @@ export default function SessionBuilder() {
   const [view, setView] = useState<'list' | 'create' | 'edit'>('list');
   const [currentStep, setCurrentStep] = useState<BuilderStep>('persona');
   const [editingSession, setEditingSession] = useState<any>(null);
+  const [sessionId, setSessionId] = useState<string | null>(null);
+  
+  // New step navigation system
+  const stepNavigation = useSessionSteps(sessionId);
 
   const [formData, setFormData] = useState<SessionFormData>({
     title: '',
