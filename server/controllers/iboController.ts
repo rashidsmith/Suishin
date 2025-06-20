@@ -5,10 +5,26 @@ import { IBO } from '../../shared/types';
 
 export const getAllIBOs = async (req: Request, res: Response) => {
   try {
-    const { data: ibos, error } = await supabaseAdmin
+    const { personaId, topic } = req.query;
+    
+    let query = supabaseAdmin
       .from('ibos')
-      .select('*')
-      .order('created_at', { ascending: false });
+      .select('*');
+
+    // Apply filters if provided
+    if (personaId && personaId !== 'all') {
+      if (personaId === 'generic') {
+        query = query.is('persona_id', null);
+      } else {
+        query = query.eq('persona_id', personaId);
+      }
+    }
+
+    if (topic) {
+      query = query.ilike('topic', `%${topic}%`);
+    }
+
+    const { data: ibos, error } = await query.order('created_at', { ascending: false });
 
     if (error) {
       console.error('Error fetching IBOs:', error);
@@ -85,7 +101,12 @@ export const getIBOById = async (req: Request, res: Response) => {
 
 export const createIBO = async (req: Request, res: Response) => {
   try {
-    const { title, description }: { title: string; description?: string } = req.body;
+    const { title, description, persona_id, topic }: { 
+      title: string; 
+      description?: string; 
+      persona_id?: string; 
+      topic?: string; 
+    } = req.body;
 
     if (!title) {
       const errorResponse: ApiResponse<never> = {
@@ -96,12 +117,20 @@ export const createIBO = async (req: Request, res: Response) => {
       return res.status(400).json(errorResponse);
     }
 
-    // Start with minimal required fields - only use columns that exist
+    // Build IBO data with new fields
     const iboData: any = {
-      title
+      title,
+      topic: topic || ''
     };
 
-    // Test what columns are actually available by trying different combinations
+    // Add optional fields if provided
+    if (description) {
+      iboData.description = description;
+    }
+    
+    if (persona_id && persona_id !== 'generic') {
+      iboData.persona_id = persona_id;
+    }
     const { data: ibo, error } = await supabaseAdmin
       .from('ibos')
       .insert([iboData])
@@ -138,12 +167,12 @@ export const createIBO = async (req: Request, res: Response) => {
 export const updateIBO = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    const { title, description } = req.body;
+    const { title, description, persona_id, topic } = req.body;
 
-    if (!title && !description) {
+    if (!title && !description && !topic && persona_id === undefined) {
       const errorResponse: ApiResponse<never> = {
         error: 'Missing update fields',
-        message: 'At least one field (title or description) must be provided',
+        message: 'At least one field must be provided',
         status: 'error'
       };
       return res.status(400).json(errorResponse);

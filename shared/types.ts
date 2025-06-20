@@ -26,6 +26,8 @@ export interface IBO {
   title: string;
   description: string;
   user_id: string;
+  persona_id?: string;        // Optional - can be persona-specific or generic
+  topic: string;             // Subject matter focus
   created_at: string;
   updated_at: string;
 }
