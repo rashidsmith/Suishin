@@ -150,6 +150,76 @@ export const GenerateIBOsStep = ({ sessionId, onStepComplete }: GenerateIBOsStep
           </CardContent>
         </Card>
 
+        {showRefinementOptions && aiContent.generatedIBOs && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Edit3 className="h-5 w-5" />
+                Refine Your IBOs
+              </CardTitle>
+              <CardDescription>
+                Use AI to iteratively improve your generated content with specific refinement requests.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                {refinementOptions.map((option, index) => {
+                  const IconComponent = option.icon;
+                  return (
+                    <Button
+                      key={index}
+                      variant="outline"
+                      className="h-auto p-4 flex flex-col items-start text-left space-y-2"
+                      onClick={() => handleRefinement(option.request)}
+                      disabled={aiContent.isGenerating}
+                    >
+                      <div className="flex items-center gap-2">
+                        <IconComponent className="h-4 w-4" />
+                        <span className="font-medium">{option.title}</span>
+                      </div>
+                      <span className="text-sm text-muted-foreground">
+                        {option.description}
+                      </span>
+                    </Button>
+                  );
+                })}
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="custom-refinement">Custom Refinement Request</Label>
+                <div className="flex gap-2">
+                  <Input
+                    id="custom-refinement"
+                    value={customRefinementRequest}
+                    onChange={(e) => setCustomRefinementRequest(e.target.value)}
+                    placeholder="Describe how you'd like to refine the IBOs..."
+                    className="flex-1"
+                  />
+                  <Button 
+                    onClick={() => handleRefinement(customRefinementRequest)}
+                    disabled={aiContent.isGenerating || !customRefinementRequest.trim()}
+                    className="flex items-center gap-2"
+                  >
+                    {aiContent.isGenerating ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <Edit3 className="h-4 w-4" />
+                    )}
+                    {aiContent.isGenerating ? 'Refining...' : 'Refine'}
+                  </Button>
+                </div>
+              </div>
+
+              {aiContent.isGenerating && (
+                <div className="flex items-center gap-2 text-blue-600 dark:text-blue-400">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  <span className="text-sm">AI is refining your IBOs...</span>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        )}
+
         {aiContent.error && (
           <Card className="border-red-200 bg-red-50 dark:border-red-800 dark:bg-red-950">
             <CardContent className="pt-6">
