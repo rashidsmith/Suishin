@@ -6,7 +6,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import Layout from "@/components/Layout";
 import Home from "@/pages/home";
 import IBOBuilder from "@/pages/ibo-builder";
-import CardComposer from "@/pages/card-composer";
+import CardComposer from "@/pages/card-composer-fixed";
 import Sessions from "@/pages/sessions";
 import Dashboard from "@/pages/dashboard";
 import SupabaseTest from "@/pages/supabase-test";

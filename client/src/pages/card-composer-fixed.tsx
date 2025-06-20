@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Loader2, Plus, Trash2, Edit, CreditCard, Save, Clock } from "lucide-react";
 import { useIBOStore, useCardStore } from '../lib/store';
@@ -16,15 +16,15 @@ interface Activity {
   title: string;
   description: string;
   type: 'C1' | 'C2' | 'C3' | 'C4';
-  duration: number; // in minutes
+  duration: number;
 }
 
-interface CardData {
+interface CardFormData {
   title: string;
   description: string;
   iboId: string;
   learningObjectiveId: string;
-  targetDuration: number; // in minutes
+  targetDuration: number;
   activities: Activity[];
 }
 
@@ -52,7 +52,7 @@ export default function CardComposer() {
   const [view, setView] = useState<'list' | 'create' | 'edit'>('list');
   
   // Form state
-  const [formData, setFormData] = useState<CardData>({
+  const [formData, setFormData] = useState<CardFormData>({
     title: '',
     description: '',
     iboId: '',
@@ -71,7 +71,7 @@ export default function CardComposer() {
   const [activityDialogOpen, setActivityDialogOpen] = useState(false);
   const [editingActivityIndex, setEditingActivityIndex] = useState<number | null>(null);
 
-  const [loading, setLoading] = useState(false);
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     loadIBOs();
@@ -112,8 +112,15 @@ export default function CardComposer() {
     setView('create');
   };
 
-  const handleEdit = (card: CardData) => {
-    setFormData(card);
+  const handleEdit = (card: any) => {
+    setFormData({
+      title: card.title || '',
+      description: card.description || '',
+      iboId: card.ibo_id || '',
+      learningObjectiveId: card.learning_objective_id || '',
+      targetDuration: card.target_duration || 30,
+      activities: card.activities || []
+    });
     setEditingCard(card);
     setView('edit');
   };
@@ -123,7 +130,7 @@ export default function CardComposer() {
       return;
     }
 
-    setLoading(true);
+    setSaving(true);
     try {
       const cardData = {
         title: formData.title,
@@ -150,7 +157,7 @@ export default function CardComposer() {
     } catch (err) {
       console.error('Failed to save card:', err);
     } finally {
-      setLoading(false);
+      setSaving(false);
     }
   };
 
@@ -263,15 +270,20 @@ export default function CardComposer() {
 
         {/* Cards Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {cards.length === 0 ? (
+          {cardsLoading && cards.length === 0 ? (
+            <div className="col-span-full text-center py-12">
+              <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4 text-blue-600" />
+              <p className="text-gray-600">Loading cards...</p>
+            </div>
+          ) : cards.length === 0 ? (
             <div className="col-span-full text-center py-12">
               <CreditCard className="w-12 h-12 mx-auto mb-4 text-gray-400" />
               <p className="text-gray-600 text-lg mb-2">No cards created yet</p>
               <p className="text-gray-500">Create your first learning card to get started!</p>
             </div>
           ) : (
-            cards.map((card, index) => (
-              <Card key={index} className="bg-white hover:shadow-md transition-shadow">
+            cards.map((card) => (
+              <Card key={card.id} className="bg-white hover:shadow-md transition-shadow">
                 <CardHeader className="pb-3">
                   <CardTitle className="text-lg font-semibold text-gray-900">
                     {card.title}
@@ -279,8 +291,8 @@ export default function CardComposer() {
                   <p className="text-sm text-gray-600">{card.description}</p>
                   <div className="flex items-center text-xs text-gray-500 mt-2">
                     <Clock className="w-3 h-3 mr-1" />
-                    {card.activities.reduce((total, activity) => total + activity.duration, 0)} min
-                    ({card.activities.length} activities)
+                    {card.activities?.reduce((total: number, activity: any) => total + activity.duration, 0) || 0} min
+                    ({card.activities?.length || 0} activities)
                   </div>
                 </CardHeader>
                 <CardContent className="pt-0">
@@ -337,14 +349,14 @@ export default function CardComposer() {
       </div>
 
       {/* Error Alert */}
-      {error && (
+      {cardsError && (
         <Alert className="mb-6 bg-red-50 border-red-200">
           <AlertDescription className="text-red-800">
-            {error}
+            {cardsError}
             <Button 
               variant="ghost" 
               size="sm" 
-              onClick={() => setError(null)}
+              onClick={clearCardsError}
               className="ml-2"
             >
               Clear
@@ -524,9 +536,9 @@ export default function CardComposer() {
           </Button>
           <Button 
             onClick={handleSaveCard} 
-            disabled={loading || !formData.title.trim() || !formData.iboId || !formData.learningObjectiveId}
+            disabled={saving || !formData.title.trim() || !formData.iboId || !formData.learningObjectiveId}
           >
-            {loading ? (
+            {saving ? (
               <>
                 <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                 Saving...
