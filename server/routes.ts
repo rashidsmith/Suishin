@@ -13,9 +13,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Add schema info endpoint
   app.get("/api/schema-info", getSchemaInfo);
-  
-  // Add debug users endpoint
-  app.get("/api/debug-users", debugUsers);
 
   // use storage to perform CRUD operations on the storage interface
   // e.g. storage.insertUser(user) or storage.getUserByUsername(username)
