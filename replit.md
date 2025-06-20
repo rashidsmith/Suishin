@@ -120,6 +120,8 @@ Changelog:
 - June 20, 2025. Performance Metrics and Observable Behaviors database integration completed - created API controllers, routes, and client functions for full CRUD operations, updated IBO Builder to save/load nested PM/OB data to Supabase, verified complete data persistence and retrieval functionality
 - June 20, 2025. Application rebranded to "Suishin" - updated all user-facing text, page titles, navigation, footer, and documentation to reflect the new learning experience platform name
 - June 20, 2025. Persona entity implementation completed - added foundational design entity with database table, full CRUD API endpoints, Zustand store, comprehensive management page with create/edit/delete functionality, and navigation integration
+- June 20, 2025. Sessions updated to persona + topic + modality driven structure - replaced old session fields with persona_id, topic, modality, and business_goals, updated database schema with proper indexes, enhanced API with filtering support, and modified Session Builder UI for new structure
+- June 20, 2025. Comprehensive navigation system implemented - added "System" dropdown menu with links to all system pages (Dashboard, Sessions) and testing interfaces (Supabase Test, Types Test, IBO Test) with descriptions, available on both desktop and mobile navigation
 
 ## User Preferences
 
