@@ -56,9 +56,7 @@ export class DatabaseStorage implements IStorage {
         // Legacy format - map username to email
         userData = {
           email: insertUser.username,
-          name: insertUser.username,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
+          name: insertUser.username
         };
       } else {
         // New format
@@ -68,6 +66,7 @@ export class DatabaseStorage implements IStorage {
         };
       }
 
+      // Simple insert with minimal fields - let Supabase handle defaults
       const { data, error } = await supabaseAdmin
         .from('users')
         .insert([userData])
@@ -79,7 +78,17 @@ export class DatabaseStorage implements IStorage {
         throw new Error(`Failed to create user: ${error.message}`);
       }
 
-      return data;
+      // Convert database response to match our User interface
+      // Handle whatever columns Supabase actually returns
+      const user: User = {
+        id: data.id || data.uuid || 'unknown',
+        email: data.email,
+        name: data.name || data.display_name || null,
+        created_at: data.created_at || data.created || new Date().toISOString(),
+        updated_at: data.updated_at || data.modified || data.created_at || new Date().toISOString()
+      };
+
+      return user;
     } catch (error) {
       console.error('Error in createUser:', error);
       throw error;
