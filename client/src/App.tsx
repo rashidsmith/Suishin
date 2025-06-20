@@ -6,7 +6,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import Layout from "@/components/Layout";
 import Home from "@/pages/home";
 import IBOBuilder from "@/pages/ibo-builder";
-import Cards from "@/pages/cards";
+import CardComposer from "@/pages/card-composer";
 import Sessions from "@/pages/sessions";
 import Dashboard from "@/pages/dashboard";
 import SupabaseTest from "@/pages/supabase-test";
@@ -23,7 +23,7 @@ function App() {
             <Routes>
               <Route path="/" element={<Home />} />
               <Route path="/ibos" element={<IBOBuilder />} />
-              <Route path="/cards" element={<Cards />} />
+              <Route path="/cards" element={<CardComposer />} />
               <Route path="/sessions" element={<Sessions />} />
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/supabase-test" element={<SupabaseTest />} />

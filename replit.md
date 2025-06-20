@@ -111,6 +111,8 @@ Changelog:
 - June 20, 2025. Express API structure implemented with IBO CRUD operations and Supabase database integration
 - June 20, 2025. Zustand store setup completed with IBO state management and async CRUD operations
 - June 20, 2025. React Router and Layout implementation with navigation between Home, IBOs, Cards, and Sessions pages
+- June 20, 2025. IBO Builder completed with comprehensive nested structure for Performance Metrics, Observable Behaviors, and Learning Objectives
+- June 20, 2025. Card Composer implemented with IBO/Learning Objective selection, activity management (C1-C4), and time tracking
 
 ## User Preferences
 
