@@ -184,4 +184,4 @@ class AIService {
   }
 }
 
-module.exports = new AIService();
+export default new AIService();

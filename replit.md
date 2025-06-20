@@ -125,6 +125,8 @@ Changelog:
 - June 20, 2025. AI-powered session generation implemented - added OpenAI integration to Session Builder with persona-aware content generation for IBOs and 4C activities, including step-by-step workflow with persona → topic/goals → modality → AI generation → cards → review
 - June 20, 2025. Modality-aware activity suggestions completed - enhanced Card schema with recommended_modalities and modality_notes fields, updated Session Builder to filter cards by modality compatibility, improved AI generation to provide modality-specific recommendations for onsite/virtual/hybrid delivery
 - June 20, 2025. Minimal database schema update for session progress tracking completed - added current_step, completed_steps, and generation_params fields to sessions table, implemented PUT /api/sessions/:id/progress endpoint for step updates, keeps AI-generated content in React state while storing only essential metadata for session flow tracking
+- June 20, 2025. Step navigation system implementation completed - created shared/sessionSteps.ts with step configuration, built useSessionSteps hook for progress management, added StepProgressBar component with visual indicators, integrated step validation and database persistence of session progress
+- June 20, 2025. Environment variables & AI service setup completed - added OPENAI_API_KEY, ANTHROPIC_API_KEY, and AI_DEFAULT_PROVIDER environment variables, created server/services/aiService.js with proper error handling, implemented /api/health/ai endpoint for service status monitoring, verified OpenAI connection and Anthropic error handling for missing keys
 
 ## User Preferences
 
