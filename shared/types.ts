@@ -9,6 +9,18 @@ export interface User {
   updated_at: string | Date;
 }
 
+export interface Persona {
+  id: string;
+  name: string;              // "New Managers", "Senior Engineers"
+  description: string;       // Detailed context about this group
+  context: string;           // Their work environment, challenges
+  experience: string;        // What they know coming in
+  motivations: string;       // What drives them, pain points
+  constraints: string;       // Time, attention, learning preferences
+  created_at: string | Date;
+  updated_at: string | Date;
+}
+
 export interface IBO {
   id: string;
   title: string;

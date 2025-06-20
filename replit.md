@@ -1,8 +1,8 @@
-# Fullstack TypeScript Application
+# Suishin - Learning Experience Platform
 
 ## Overview
 
-This is a modern fullstack web application built with React, Express.js, and TypeScript. The application follows a clean monorepo structure with separate client and server directories, utilizing modern development tools and frameworks. It includes a comprehensive UI component library based on shadcn/ui and Radix UI primitives, configured for PostgreSQL database integration with Drizzle ORM.
+Suishin is a comprehensive learning experience platform built with React, Express.js, and TypeScript. The application follows a clean monorepo structure with separate client and server directories, utilizing modern development tools and frameworks. It includes a comprehensive UI component library based on shadcn/ui and Radix UI primitives, configured for Supabase PostgreSQL database integration with full CRUD operations for educational content management.
 
 ## System Architecture
 
@@ -118,6 +118,7 @@ Changelog:
 - June 20, 2025. Export functionality completed with JSON/CSV format support, data validation, and download capabilities for IBOs, Cards, and Sessions
 - June 20, 2025. Complete application testing and deployment readiness achieved - all API endpoints functional, comprehensive user journey verified from IBO creation through Card composition to Session building, database schema finalized, and all components working seamlessly together
 - June 20, 2025. Performance Metrics and Observable Behaviors database integration completed - created API controllers, routes, and client functions for full CRUD operations, updated IBO Builder to save/load nested PM/OB data to Supabase, verified complete data persistence and retrieval functionality
+- June 20, 2025. Application rebranded to "Suishin" - updated all user-facing text, page titles, navigation, footer, and documentation to reflect the new learning experience platform name
 
 ## User Preferences
 
