@@ -23,6 +23,7 @@ export default function Layout({ children }: LayoutProps) {
 
   const navigation = [
     { name: 'Home', href: '/', icon: Home },
+    { name: 'Personas', href: '/personas', icon: Users },
     { name: 'IBO Builder', href: '/ibos', icon: BookOpen },
     { name: 'Card Composer', href: '/cards', icon: CreditCard },
     { name: 'Session Builder', href: '/session-builder', icon: PlayCircle },
