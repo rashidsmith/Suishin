@@ -16,18 +16,24 @@ interface SessionState {
 }
 
 interface SessionStore extends SessionState {
-  loadSessions: () => Promise<void>;
+  loadSessions: (params?: { personaId?: string; modality?: string; topic?: string; status?: string }) => Promise<void>;
   createSession: (sessionData: {
     user_id: string;
     learning_objective_id: string;
     title: string;
-    description?: string;
+    persona_id: string;
+    topic: string;
+    modality: 'onsite' | 'virtual' | 'hybrid';
+    business_goals: string;
     card_ids?: string[];
   }) => Promise<void>;
   selectSession: (session: Session | null) => void;
   updateSession: (id: string, sessionData: {
     title?: string;
-    description?: string;
+    persona_id?: string;
+    topic?: string;
+    modality?: 'onsite' | 'virtual' | 'hybrid';
+    business_goals?: string;
     status?: 'not_started' | 'in_progress' | 'completed' | 'paused';
     started_at?: string;
     completed_at?: string;
@@ -43,10 +49,10 @@ export const useSessionStore = create<SessionStore>((set, get) => ({
   loading: false,
   error: null,
 
-  loadSessions: async () => {
+  loadSessions: async (params?: { personaId?: string; modality?: string; topic?: string; status?: string }) => {
     set({ loading: true, error: null });
     try {
-      const sessions = await fetchSessions();
+      const sessions = await fetchSessions(params);
       set({ sessions, loading: false });
     } catch (error) {
       set({ 

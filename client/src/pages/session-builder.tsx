@@ -113,12 +113,20 @@ export default function SessionBuilder() {
       errors.title = 'Session title is required';
     }
     
-    if (formData.title.length > 100) {
-      errors.title = 'Title must be less than 100 characters';
+    if (!formData.persona_id) {
+      errors.persona_id = 'Persona is required';
     }
     
-    if (formData.description.length > 500) {
-      errors.description = 'Description must be less than 500 characters';
+    if (!formData.topic.trim()) {
+      errors.topic = 'Topic is required';
+    }
+    
+    if (!formData.business_goals.trim()) {
+      errors.business_goals = 'Business goals are required';
+    }
+    
+    if (formData.title.length > 100) {
+      errors.title = 'Title must be less than 100 characters';
     }
 
     setFormErrors(errors);
@@ -128,7 +136,10 @@ export default function SessionBuilder() {
   const resetForm = () => {
     setFormData({
       title: '',
-      description: '',
+      persona_id: '',
+      topic: '',
+      modality: 'virtual',
+      business_goals: '',
       cardIds: []
     });
     setEditingSession(null);
@@ -143,7 +154,10 @@ export default function SessionBuilder() {
   const handleEdit = (session: any) => {
     setFormData({
       title: session.title,
-      description: session.description || '',
+      persona_id: session.persona_id || '',
+      topic: session.topic || '',
+      modality: session.modality || 'virtual',
+      business_goals: session.business_goals || '',
       cardIds: [] // In real app, would load session cards
     });
     setEditingSession(session);
@@ -171,7 +185,10 @@ export default function SessionBuilder() {
           user_id: 'user-1', // In real app, this would come from auth
           learning_objective_id: ibos[0]?.id || 'default-lo-id',
           title: formData.title,
-          description: formData.description,
+          persona_id: formData.persona_id,
+          topic: formData.topic,
+          modality: formData.modality,
+          business_goals: formData.business_goals,
           card_ids: formData.cardIds
         });
         toast({
@@ -181,7 +198,10 @@ export default function SessionBuilder() {
       } else if (editingSession) {
         await updateSession(editingSession.id, {
           title: formData.title,
-          description: formData.description,
+          persona_id: formData.persona_id,
+          topic: formData.topic,
+          modality: formData.modality,
+          business_goals: formData.business_goals,
           card_ids: formData.cardIds
         });
         toast({
@@ -307,9 +327,20 @@ export default function SessionBuilder() {
                   <div className="flex justify-between items-start">
                     <div className="flex-1">
                       <h3 className="text-lg font-semibold">{session.title}</h3>
-                      {session.description && (
-                        <p className="text-muted-foreground mt-1">{session.description}</p>
-                      )}
+                      <div className="mt-2 space-y-1">
+                        <p className="text-sm text-blue-600 font-medium">
+                          Topic: {session.topic}
+                        </p>
+                        <p className="text-sm text-green-600 font-medium">
+                          Persona: {(session as any).personas?.name || 'Unknown'}
+                        </p>
+                        <p className="text-sm text-purple-600 font-medium">
+                          Modality: {session.modality}
+                        </p>
+                        {session.business_goals && (
+                          <p className="text-sm text-gray-600 mt-2">{session.business_goals}</p>
+                        )}
+                      </div>
                       <div className="flex items-center gap-4 mt-3">
                         <Badge variant={session.status === 'completed' ? 'default' : 'secondary'}>
                           {session.status.replace('_', ' ')}
@@ -373,22 +404,81 @@ export default function SessionBuilder() {
               </div>
 
               <div>
-                <Label htmlFor="description">Description</Label>
-                <Textarea
-                  id="description"
-                  value={formData.description}
+                <Label htmlFor="persona">Target Persona*</Label>
+                <Select value={formData.persona_id} onValueChange={(value) => {
+                  setFormData(prev => ({ ...prev, persona_id: value }));
+                  if (formErrors.persona_id) {
+                    setFormErrors(prev => ({ ...prev, persona_id: '' }));
+                  }
+                }}>
+                  <SelectTrigger className={formErrors.persona_id ? 'border-red-500' : ''}>
+                    <SelectValue placeholder="Select target persona" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {personas.map(persona => (
+                      <SelectItem key={persona.id} value={persona.id}>
+                        {persona.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {formErrors.persona_id && (
+                  <p className="text-red-500 text-sm mt-1">{formErrors.persona_id}</p>
+                )}
+              </div>
+
+              <div>
+                <Label htmlFor="topic">Topic*</Label>
+                <Input
+                  id="topic"
+                  value={formData.topic}
                   onChange={(e) => {
-                    setFormData(prev => ({ ...prev, description: e.target.value }));
-                    if (formErrors.description) {
-                      setFormErrors(prev => ({ ...prev, description: '' }));
+                    setFormData(prev => ({ ...prev, topic: e.target.value }));
+                    if (formErrors.topic) {
+                      setFormErrors(prev => ({ ...prev, topic: '' }));
                     }
                   }}
-                  placeholder="Enter session description"
-                  rows={3}
-                  className={formErrors.description ? 'border-red-500' : ''}
+                  placeholder="Enter subject matter focus"
+                  className={formErrors.topic ? 'border-red-500' : ''}
                 />
-                {formErrors.description && (
-                  <p className="text-red-500 text-sm mt-1">{formErrors.description}</p>
+                {formErrors.topic && (
+                  <p className="text-red-500 text-sm mt-1">{formErrors.topic}</p>
+                )}
+              </div>
+
+              <div>
+                <Label htmlFor="modality">Delivery Modality*</Label>
+                <Select value={formData.modality} onValueChange={(value: 'onsite' | 'virtual' | 'hybrid') => {
+                  setFormData(prev => ({ ...prev, modality: value }));
+                }}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select delivery mode" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="onsite">Onsite</SelectItem>
+                    <SelectItem value="virtual">Virtual</SelectItem>
+                    <SelectItem value="hybrid">Hybrid</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
+                <Label htmlFor="business_goals">Business Goals*</Label>
+                <Textarea
+                  id="business_goals"
+                  value={formData.business_goals}
+                  onChange={(e) => {
+                    setFormData(prev => ({ ...prev, business_goals: e.target.value }));
+                    if (formErrors.business_goals) {
+                      setFormErrors(prev => ({ ...prev, business_goals: '' }));
+                    }
+                  }}
+                  placeholder="Enter session-specific business outcomes"
+                  rows={3}
+                  className={formErrors.business_goals ? 'border-red-500' : ''}
+                />
+                {formErrors.business_goals && (
+                  <p className="text-red-500 text-sm mt-1">{formErrors.business_goals}</p>
                 )}
               </div>
 
