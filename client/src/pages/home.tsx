@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -10,7 +11,11 @@ import {
   Code, 
   Play,
   Plus,
-  Users 
+  Users,
+  BookOpen,
+  CreditCard,
+  PlayCircle,
+  ArrowRight
 } from "lucide-react";
 import { apiClient } from '../lib/api';
 import { useAppStore } from '../lib/store';
@@ -220,6 +225,67 @@ export default function Home() {
                 <h4 className="font-semibold">Tailwind</h4>
                 <p className="text-sm text-gray-600">Styling</p>
               </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Quick Navigation */}
+        <Card className="bg-white shadow-md">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Play className="w-5 h-5" />
+              Quick Start
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-gray-600 mb-6">
+              Get started with the Learning Architect by exploring our main features:
+            </p>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <Link to="/ibos">
+                <Card className="cursor-pointer hover:shadow-md transition-shadow bg-blue-50 border-blue-200">
+                  <CardContent className="p-4 text-center">
+                    <BookOpen className="w-8 h-8 mx-auto mb-2 text-blue-600" />
+                    <h4 className="font-semibold text-blue-900">IBO Builder</h4>
+                    <p className="text-sm text-blue-700 mb-3">
+                      Create learning objectives
+                    </p>
+                    <Button size="sm" variant="outline" className="w-full">
+                      Start Building <ArrowRight className="w-3 h-3 ml-1" />
+                    </Button>
+                  </CardContent>
+                </Card>
+              </Link>
+
+              <Link to="/cards">
+                <Card className="cursor-pointer hover:shadow-md transition-shadow bg-green-50 border-green-200">
+                  <CardContent className="p-4 text-center">
+                    <CreditCard className="w-8 h-8 mx-auto mb-2 text-green-600" />
+                    <h4 className="font-semibold text-green-900">Card Composer</h4>
+                    <p className="text-sm text-green-700 mb-3">
+                      Design learning cards
+                    </p>
+                    <Button size="sm" variant="outline" className="w-full">
+                      Coming Soon <ArrowRight className="w-3 h-3 ml-1" />
+                    </Button>
+                  </CardContent>
+                </Card>
+              </Link>
+
+              <Link to="/sessions">
+                <Card className="cursor-pointer hover:shadow-md transition-shadow bg-purple-50 border-purple-200">
+                  <CardContent className="p-4 text-center">
+                    <PlayCircle className="w-8 h-8 mx-auto mb-2 text-purple-600" />
+                    <h4 className="font-semibold text-purple-900">Session Builder</h4>
+                    <p className="text-sm text-purple-700 mb-3">
+                      Create learning sessions
+                    </p>
+                    <Button size="sm" variant="outline" className="w-full">
+                      Coming Soon <ArrowRight className="w-3 h-3 ml-1" />
+                    </Button>
+                  </CardContent>
+                </Card>
+              </Link>
             </div>
           </CardContent>
         </Card>
