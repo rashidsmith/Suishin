@@ -1,16 +1,15 @@
-import { useEffect, useState } from 'react';
-import { Button } from "@/components/ui/button";
+import { useState, useEffect } from 'react';
+import { useToast } from "@/hooks/use-toast";
+import { useCardStore } from '../lib/store';
+import { useIBOStore } from '../lib/store';
+import { usePersonaStore } from '../lib/personaStore';
+import { useSessionStore } from '../lib/sessionStore';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Loader2, Plus, Trash2, Edit, Clock, Save, BookOpen, AlertCircle, ArrowLeft, ArrowRight, Check, Users, Target, Settings, CreditCard } from "lucide-react";
-import { useCardStore, useIBOStore } from '../lib/store';
-import { useSessionStore } from '../lib/sessionStore';
-import { usePersonaStore } from '../lib/personaStore';
-import { useToast } from '@/hooks/use-toast';
-import { Badge } from '@/components/ui/badge';
+import { Plus, BookOpen, Trash2, Users, Target, Settings, CreditCard, Check, ArrowLeft, ArrowRight, Save, Loader2 } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Progress } from "@/components/ui/progress";
@@ -50,8 +49,7 @@ export default function SessionBuilder() {
   const [view, setView] = useState<'list' | 'create' | 'edit'>('list');
   const [currentStep, setCurrentStep] = useState<BuilderStep>('persona');
   const [editingSession, setEditingSession] = useState<any>(null);
-  
-  // Form state
+
   const [formData, setFormData] = useState<SessionFormData>({
     title: '',
     persona_id: '',
@@ -138,27 +136,23 @@ export default function SessionBuilder() {
     }
   }, [formData.persona_id, formData.topic, ibos]);
 
-  const validateForm = (): boolean => {
+  const validateForm = () => {
     const errors: {[key: string]: string} = {};
     
     if (!formData.title.trim()) {
       errors.title = 'Session title is required';
     }
-    
     if (!formData.persona_id) {
-      errors.persona_id = 'Persona is required';
+      errors.persona_id = 'Persona selection is required';
     }
-    
     if (!formData.topic.trim()) {
       errors.topic = 'Topic is required';
     }
-    
     if (!formData.business_goals.trim()) {
       errors.business_goals = 'Business goals are required';
     }
-    
-    if (formData.title.length > 100) {
-      errors.title = 'Title must be less than 100 characters';
+    if (!formData.modality) {
+      errors.modality = 'Delivery modality is required';
     }
 
     setFormErrors(errors);
@@ -215,71 +209,42 @@ export default function SessionBuilder() {
     }
   };
 
-  const handleEdit = (session: any) => {
-    setFormData({
-      title: session.title,
-      persona_id: session.persona_id || '',
-      topic: session.topic || '',
-      modality: session.modality || 'virtual',
-      business_goals: session.business_goals || '',
-      cardIds: [] // In real app, would load session cards
-    });
-    setEditingSession(session);
-    setView('edit');
-  };
-
   const handleSaveSession = async () => {
-    if (!validateForm()) {
-      return;
-    }
-
-    if (ibos.length === 0) {
-      toast({
-        title: "No IBOs Available",
-        description: "Please create an IBO first before creating sessions.",
-        variant: "destructive",
-      });
-      return;
-    }
+    if (!validateForm()) return;
 
     setSaving(true);
     try {
-      if (view === 'create') {
-        await createSession({
-          user_id: 'user-1', // In real app, this would come from auth
-          learning_objective_id: ibos[0]?.id || 'default-lo-id',
-          title: formData.title,
-          persona_id: formData.persona_id,
-          topic: formData.topic,
-          modality: formData.modality,
-          business_goals: formData.business_goals,
-          card_ids: formData.cardIds
-        });
+      const sessionData = {
+        title: formData.title,
+        persona_id: formData.persona_id,
+        topic: formData.topic,
+        modality: formData.modality,
+        business_goals: formData.business_goals,
+        user_id: 'default-user',
+        learning_objective_id: '',
+        cardIds: formData.cardIds
+      };
+
+      if (view === 'edit' && editingSession) {
+        await updateSession(editingSession.id, sessionData);
         toast({
-          title: "Session Created",
-          description: "Your learning session has been created successfully.",
+          title: "Success",
+          description: "Session updated successfully",
         });
-      } else if (editingSession) {
-        await updateSession(editingSession.id, {
-          title: formData.title,
-          persona_id: formData.persona_id,
-          topic: formData.topic,
-          modality: formData.modality,
-          business_goals: formData.business_goals,
-          card_ids: formData.cardIds
-        });
+      } else {
+        await createSession(sessionData);
         toast({
-          title: "Session Updated",
-          description: "Your session has been updated successfully.",
+          title: "Success",
+          description: "Session created successfully",
         });
       }
-
+      
       resetForm();
       setView('list');
-    } catch (error) {
+    } catch (error: any) {
       toast({
-        title: "Error Saving Session",
-        description: error instanceof Error ? error.message : "Failed to save session",
+        title: "Error",
+        description: error.message || "Failed to save session",
         variant: "destructive",
       });
     } finally {
@@ -287,66 +252,45 @@ export default function SessionBuilder() {
     }
   };
 
-  const handleDeleteSession = async (sessionId: string) => {
-    if (!confirm('Are you sure you want to delete this session? This action cannot be undone.')) {
-      return;
+  const handleEdit = (session: any) => {
+    setFormData({
+      title: session.title,
+      persona_id: session.persona_id || '',
+      topic: session.topic || '',
+      modality: session.modality || 'virtual',
+      business_goals: session.business_goals || '',
+      cardIds: []
+    });
+    setEditingSession(session);
+    setCurrentStep('persona');
+    setView('edit');
+  };
+
+  const handleDelete = async (sessionId: string) => {
+    if (window.confirm('Are you sure you want to delete this session?')) {
+      try {
+        await deleteSession(sessionId);
+        toast({
+          title: "Success",
+          description: "Session deleted successfully",
+        });
+      } catch (error: any) {
+        toast({
+          title: "Error",
+          description: error.message || "Failed to delete session",
+          variant: "destructive",
+        });
+      }
     }
-
-    try {
-      await deleteSession(sessionId);
-      toast({
-        title: "Session Deleted",
-        description: "The session has been deleted successfully.",
-      });
-    } catch (error) {
-      toast({
-        title: "Error Deleting Session",
-        description: error instanceof Error ? error.message : "Failed to delete session",
-        variant: "destructive",
-      });
-    }
   };
 
-  const addCardToSession = (cardId: string) => {
-    if (!formData.cardIds.includes(cardId)) {
-      setFormData(prev => ({
-        ...prev,
-        cardIds: [...prev.cardIds, cardId]
-      }));
-    }
-  };
-
-  const removeCardFromSession = (cardId: string) => {
-    setFormData(prev => ({
-      ...prev,
-      cardIds: prev.cardIds.filter(id => id !== cardId)
-    }));
-  };
-
-  const getTotalDuration = () => {
-    return formData.cardIds.reduce((total, cardId) => {
-      const card = cards.find(c => c.id === cardId);
-      return total + (card?.target_duration || 0);
-    }, 0);
-  };
-
-  if (cardsLoading || sessionsLoading || ibosLoading) {
+  if (personasLoading || cardsLoading || ibosLoading || sessionsLoading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <Loader2 className="h-8 w-8 animate-spin" />
-        <span className="ml-2">Loading session data...</span>
+      <div className="container mx-auto p-6 space-y-6">
+        <div className="flex justify-center items-center h-64">
+          <Loader2 className="h-8 w-8 animate-spin" />
+        </div>
       </div>
-    );
-  }
-
-  if (cardsError || sessionsError || ibosError) {
-    return (
-      <Alert variant="destructive" className="max-w-md mx-auto mt-8">
-        <AlertCircle className="h-4 w-4" />
-        <AlertDescription>
-          Failed to load session data. Please refresh the page and try again.
-        </AlertDescription>
-      </Alert>
     );
   }
 
@@ -401,31 +345,23 @@ export default function SessionBuilder() {
                         <p className="text-sm text-purple-600 font-medium">
                           Modality: {session.modality}
                         </p>
-                        {session.business_goals && (
-                          <p className="text-sm text-gray-600 mt-2">{session.business_goals}</p>
-                        )}
-                      </div>
-                      <div className="flex items-center gap-4 mt-3">
-                        <Badge variant={session.status === 'completed' ? 'default' : 'secondary'}>
-                          {session.status.replace('_', ' ')}
-                        </Badge>
-                        <span className="text-sm text-muted-foreground">
-                          Created {new Date(session.created_at).toLocaleDateString()}
-                        </span>
+                        <p className="text-sm text-gray-600">
+                          Goals: {session.business_goals}
+                        </p>
                       </div>
                     </div>
-                    <div className="flex gap-2">
+                    <div className="flex space-x-2">
                       <Button 
-                        variant="outline" 
-                        size="sm"
+                        size="sm" 
+                        variant="outline"
                         onClick={() => handleEdit(session)}
                       >
-                        <Edit className="h-4 w-4" />
+                        Edit
                       </Button>
                       <Button 
-                        variant="outline" 
-                        size="sm"
-                        onClick={() => handleDeleteSession(session.id)}
+                        size="sm" 
+                        variant="outline"
+                        onClick={() => handleDelete(session.id)}
                       >
                         <Trash2 className="h-4 w-4" />
                       </Button>
@@ -439,194 +375,361 @@ export default function SessionBuilder() {
       )}
 
       {(view === 'create' || view === 'edit') && (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Session Form */}
+        <div className="space-y-6">
+          {/* Progress Bar */}
           <Card>
-            <CardHeader>
-              <CardTitle>
-                {view === 'create' ? 'Create Session' : 'Edit Session'}
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div>
-                <Label htmlFor="title">Session Title</Label>
-                <Input
-                  id="title"
-                  value={formData.title}
-                  onChange={(e) => {
-                    setFormData(prev => ({ ...prev, title: e.target.value }));
-                    if (formErrors.title) {
-                      setFormErrors(prev => ({ ...prev, title: '' }));
-                    }
-                  }}
-                  placeholder="Enter session title"
-                  className={formErrors.title ? 'border-red-500' : ''}
-                />
-                {formErrors.title && (
-                  <p className="text-red-500 text-sm mt-1">{formErrors.title}</p>
-                )}
-              </div>
-
-              <div>
-                <Label htmlFor="persona">Target Persona*</Label>
-                <Select value={formData.persona_id} onValueChange={(value) => {
-                  setFormData(prev => ({ ...prev, persona_id: value }));
-                  if (formErrors.persona_id) {
-                    setFormErrors(prev => ({ ...prev, persona_id: '' }));
-                  }
-                }}>
-                  <SelectTrigger className={formErrors.persona_id ? 'border-red-500' : ''}>
-                    <SelectValue placeholder="Select target persona" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {personas.map(persona => (
-                      <SelectItem key={persona.id} value={persona.id}>
-                        {persona.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                {formErrors.persona_id && (
-                  <p className="text-red-500 text-sm mt-1">{formErrors.persona_id}</p>
-                )}
-              </div>
-
-              <div>
-                <Label htmlFor="topic">Topic*</Label>
-                <Input
-                  id="topic"
-                  value={formData.topic}
-                  onChange={(e) => {
-                    setFormData(prev => ({ ...prev, topic: e.target.value }));
-                    if (formErrors.topic) {
-                      setFormErrors(prev => ({ ...prev, topic: '' }));
-                    }
-                  }}
-                  placeholder="Enter subject matter focus"
-                  className={formErrors.topic ? 'border-red-500' : ''}
-                />
-                {formErrors.topic && (
-                  <p className="text-red-500 text-sm mt-1">{formErrors.topic}</p>
-                )}
-              </div>
-
-              <div>
-                <Label htmlFor="modality">Delivery Modality*</Label>
-                <Select value={formData.modality} onValueChange={(value: 'onsite' | 'virtual' | 'hybrid') => {
-                  setFormData(prev => ({ ...prev, modality: value }));
-                }}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select delivery mode" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="onsite">Onsite</SelectItem>
-                    <SelectItem value="virtual">Virtual</SelectItem>
-                    <SelectItem value="hybrid">Hybrid</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div>
-                <Label htmlFor="business_goals">Business Goals*</Label>
-                <Textarea
-                  id="business_goals"
-                  value={formData.business_goals}
-                  onChange={(e) => {
-                    setFormData(prev => ({ ...prev, business_goals: e.target.value }));
-                    if (formErrors.business_goals) {
-                      setFormErrors(prev => ({ ...prev, business_goals: '' }));
-                    }
-                  }}
-                  placeholder="Enter session-specific business outcomes"
-                  rows={3}
-                  className={formErrors.business_goals ? 'border-red-500' : ''}
-                />
-                {formErrors.business_goals && (
-                  <p className="text-red-500 text-sm mt-1">{formErrors.business_goals}</p>
-                )}
-              </div>
-
-              <div className="flex justify-between items-center">
-                <span className="text-sm font-medium">
-                  Cards Selected: {formData.cardIds.length}
-                </span>
-                <div className="flex items-center gap-2">
-                  <Clock className="h-4 w-4" />
-                  <span className="text-sm">{getTotalDuration()} min</span>
+            <CardContent className="pt-6">
+              <div className="space-y-4">
+                <div className="flex justify-between items-center">
+                  <h2 className="text-lg font-semibold">Step {getCurrentStepIndex() + 1} of {steps.length}</h2>
+                  <span className="text-sm text-muted-foreground">{Math.round(getProgressPercentage())}% Complete</span>
+                </div>
+                <Progress value={getProgressPercentage()} className="w-full" />
+                <div className="flex justify-between text-xs text-muted-foreground">
+                  {steps.map((step, index) => {
+                    const Icon = step.icon;
+                    const isActive = step.id === currentStep;
+                    const isCompleted = getStepIndex(step.id) < getCurrentStepIndex();
+                    return (
+                      <div key={step.id} className={`flex flex-col items-center space-y-1 ${isActive ? 'text-blue-600' : isCompleted ? 'text-green-600' : 'text-gray-400'}`}>
+                        <Icon className="w-4 h-4" />
+                        <span className="hidden sm:block">{step.title}</span>
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
-
-              <Button 
-                onClick={handleSaveSession} 
-                disabled={saving}
-                className="w-full"
-              >
-                {saving ? (
-                  <>
-                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                    Saving...
-                  </>
-                ) : (
-                  <>
-                    <Save className="h-4 w-4 mr-2" />
-                    {view === 'create' ? 'Create Session' : 'Update Session'}
-                  </>
-                )}
-              </Button>
             </CardContent>
           </Card>
 
-          {/* Available Cards */}
+          {/* Step Content */}
+          {currentStep === 'persona' && renderPersonaStep()}
+          {currentStep === 'topic-goals' && renderTopicGoalsStep()}
+          {currentStep === 'modality' && renderModalityStep()}
+          {currentStep === 'cards' && renderCardsStep()}
+          {currentStep === 'review' && renderReviewStep()}
+
+          {/* Navigation */}
           <Card>
-            <CardHeader>
-              <CardTitle>Available Cards</CardTitle>
-            </CardHeader>
-            <CardContent>
-              {cards.length === 0 ? (
-                <div className="text-center py-8">
-                  <p className="text-muted-foreground">No cards available</p>
-                  <p className="text-sm text-muted-foreground mt-1">
-                    Create some cards first to add them to sessions
-                  </p>
+            <CardContent className="pt-6">
+              <div className="flex justify-between">
+                <Button
+                  variant="outline"
+                  onClick={handlePrevStep}
+                  disabled={getCurrentStepIndex() === 0}
+                >
+                  <ArrowLeft className="w-4 h-4 mr-2" />
+                  Previous
+                </Button>
+                
+                <div className="space-x-2">
+                  {getCurrentStepIndex() === steps.length - 1 ? (
+                    <Button
+                      onClick={handleSaveSession}
+                      disabled={!canProceedToNextStep() || saving}
+                    >
+                      {saving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}
+                      Create Session
+                    </Button>
+                  ) : (
+                    <Button
+                      onClick={handleNextStep}
+                      disabled={!canProceedToNextStep()}
+                    >
+                      Next
+                      <ArrowRight className="w-4 h-4 ml-2" />
+                    </Button>
+                  )}
                 </div>
-              ) : (
-                <div className="space-y-3 max-h-96 overflow-y-auto">
-                  {cards.map((card) => (
-                    <div key={card.id} className="flex items-center justify-between p-3 border rounded-lg">
-                      <div className="flex-1">
-                        <h4 className="font-medium">{card.title}</h4>
-                        <div className="flex items-center gap-2 mt-1">
-                          <Clock className="h-3 w-3" />
-                          <span className="text-xs text-muted-foreground">
-                            {card.target_duration} min
-                          </span>
-                        </div>
-                      </div>
-                      {formData.cardIds.includes(card.id) ? (
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => removeCardFromSession(card.id)}
-                        >
-                          <Trash2 className="h-3 w-3" />
-                        </Button>
-                      ) : (
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => addCardToSession(card.id)}
-                        >
-                          <Plus className="h-3 w-3" />
-                        </Button>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              )}
+              </div>
             </CardContent>
           </Card>
         </div>
       )}
     </div>
   );
+
+  // Step 1: Persona Selection
+  function renderPersonaStep() {
+    const selectedPersona = personas.find(p => p.id === formData.persona_id);
+    
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Users className="w-5 h-5" />
+            Select Target Persona
+          </CardTitle>
+          <p className="text-muted-foreground">Choose who this session is designed for</p>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div>
+            <Label htmlFor="persona">Target Persona*</Label>
+            <Select value={formData.persona_id} onValueChange={(value) => {
+              setFormData(prev => ({ ...prev, persona_id: value }));
+            }}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select target persona" />
+              </SelectTrigger>
+              <SelectContent>
+                {personas.map(persona => (
+                  <SelectItem key={persona.id} value={persona.id}>
+                    {persona.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          {selectedPersona && (
+            <div className="p-4 bg-blue-50 rounded-lg">
+              <h4 className="font-semibold text-blue-900 mb-2">{selectedPersona.name}</h4>
+              <p className="text-blue-800 text-sm mb-2">{selectedPersona.description}</p>
+              <div className="space-y-2 text-sm">
+                <div><strong>Context:</strong> {selectedPersona.context}</div>
+                <div><strong>Experience:</strong> {selectedPersona.experience}</div>
+                <div><strong>Motivations:</strong> {selectedPersona.motivations}</div>
+                <div><strong>Constraints:</strong> {selectedPersona.constraints}</div>
+              </div>
+            </div>
+          )}
+
+          <Button variant="outline" className="w-full">
+            <Plus className="w-4 h-4 mr-2" />
+            Create New Persona
+          </Button>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  // Step 2: Topic & Goals
+  function renderTopicGoalsStep() {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Target className="w-5 h-5" />
+            Define Topic & Business Goals
+          </CardTitle>
+          <p className="text-muted-foreground">Set the focus and desired outcomes</p>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div>
+            <Label htmlFor="topic">Topic*</Label>
+            <Input
+              id="topic"
+              value={formData.topic}
+              onChange={(e) => setFormData(prev => ({ ...prev, topic: e.target.value }))}
+              placeholder="Enter subject matter focus"
+            />
+          </div>
+
+          <div>
+            <Label htmlFor="business_goals">Business Goals*</Label>
+            <Textarea
+              id="business_goals"
+              value={formData.business_goals}
+              onChange={(e) => setFormData(prev => ({ ...prev, business_goals: e.target.value }))}
+              placeholder="Enter session-specific business outcomes"
+              rows={4}
+            />
+          </div>
+
+          {filteredIBOs.length > 0 && (
+            <div className="p-4 bg-green-50 rounded-lg">
+              <h4 className="font-semibold text-green-900 mb-2">Related IBOs Found</h4>
+              <p className="text-green-800 text-sm mb-3">These existing IBOs match your persona and topic:</p>
+              <div className="space-y-2">
+                {filteredIBOs.map(ibo => (
+                  <div key={ibo.id} className="p-2 bg-white rounded border text-sm">
+                    <div className="font-medium">{ibo.title}</div>
+                    <div className="text-gray-600">{ibo.description}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    );
+  }
+
+  // Step 3: Modality Selection
+  function renderModalityStep() {
+    const modalityInfo = {
+      onsite: {
+        title: "Onsite",
+        description: "In-person classroom or workshop setting",
+        considerations: ["Face-to-face interaction", "Physical materials", "Venue requirements", "Travel logistics"],
+        constraints: ["Limited to physical location", "Scheduling challenges", "Higher costs"]
+      },
+      virtual: {
+        title: "Virtual",
+        description: "Online delivery via video conferencing",
+        considerations: ["Digital tools and platforms", "Internet connectivity", "Screen sharing", "Breakout rooms"],
+        constraints: ["Technology dependencies", "Engagement challenges", "Time zone differences"]
+      },
+      hybrid: {
+        title: "Hybrid",
+        description: "Combination of onsite and virtual elements",
+        considerations: ["Blended experience design", "Technology integration", "Multiple delivery modes"],
+        constraints: ["Complex logistics", "Dual preparation required", "Coordination challenges"]
+      }
+    };
+
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Settings className="w-5 h-5" />
+            Choose Delivery Modality
+          </CardTitle>
+          <p className="text-muted-foreground">Select how the session will be delivered</p>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <RadioGroup
+            value={formData.modality}
+            onValueChange={(value: 'onsite' | 'virtual' | 'hybrid') => 
+              setFormData(prev => ({ ...prev, modality: value }))
+            }
+          >
+            {Object.entries(modalityInfo).map(([key, info]) => (
+              <div key={key} className="space-y-2">
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value={key} id={key} />
+                  <Label htmlFor={key} className="font-medium">{info.title}</Label>
+                </div>
+                <div className="ml-6 text-sm text-muted-foreground">
+                  <p className="mb-2">{info.description}</p>
+                  {formData.modality === key && (
+                    <div className="p-3 bg-gray-50 rounded">
+                      <div className="mb-2">
+                        <strong>Considerations:</strong>
+                        <ul className="list-disc list-inside mt-1">
+                          {info.considerations.map((item, index) => (
+                            <li key={index}>{item}</li>
+                          ))}
+                        </ul>
+                      </div>
+                      <div>
+                        <strong>Constraints:</strong>
+                        <ul className="list-disc list-inside mt-1 text-red-600">
+                          {info.constraints.map((item, index) => (
+                            <li key={index}>{item}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            ))}
+          </RadioGroup>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  // Step 4: 4C Structure (Cards)
+  function renderCardsStep() {
+    const availableCards = cards.filter(card => 
+      !formData.cardIds.includes(card.id)
+    );
+
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <CreditCard className="w-5 h-5" />
+            Design 4C Learning Flow
+          </CardTitle>
+          <p className="text-muted-foreground">Select cards to build your session structure</p>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <h4 className="font-medium mb-2">Available Cards</h4>
+              <div className="space-y-2 max-h-64 overflow-y-auto">
+                {availableCards.map(card => (
+                  <div key={card.id} className="p-2 border rounded cursor-pointer hover:bg-gray-50"
+                       onClick={() => setFormData(prev => ({ ...prev, cardIds: [...prev.cardIds, card.id] }))}>
+                    <div className="font-medium">{card.title}</div>
+                    <div className="text-sm text-gray-600">{card.content}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+            
+            <div>
+              <h4 className="font-medium mb-2">Selected Cards ({formData.cardIds.length})</h4>
+              <div className="space-y-2 max-h-64 overflow-y-auto">
+                {formData.cardIds.map((cardId, index) => {
+                  const card = cards.find(c => c.id === cardId);
+                  if (!card) return null;
+                  return (
+                    <div key={cardId} className="p-2 border rounded bg-blue-50">
+                      <div className="flex justify-between items-start">
+                        <div className="flex-1">
+                          <div className="font-medium">{card.title}</div>
+                          <div className="text-sm text-gray-600">{card.content}</div>
+                        </div>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => setFormData(prev => ({ 
+                            ...prev, 
+                            cardIds: prev.cardIds.filter(id => id !== cardId) 
+                          }))}
+                        >
+                          <Trash2 className="w-3 h-3" />
+                        </Button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  // Step 5: Review & Create
+  function renderReviewStep() {
+    const selectedPersona = personas.find(p => p.id === formData.persona_id);
+    const selectedCards = cards.filter(c => formData.cardIds.includes(c.id));
+
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Check className="w-5 h-5" />
+            Review & Create Session
+          </CardTitle>
+          <p className="text-muted-foreground">Finalize your session details</p>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div>
+            <Label htmlFor="session-title">Session Title*</Label>
+            <Input
+              id="session-title"
+              value={formData.title}
+              onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
+              placeholder="Enter session title"
+            />
+          </div>
+
+          <div className="p-4 bg-gray-50 rounded-lg space-y-3">
+            <div><strong>Persona:</strong> {selectedPersona?.name}</div>
+            <div><strong>Topic:</strong> {formData.topic}</div>
+            <div><strong>Modality:</strong> {formData.modality}</div>
+            <div><strong>Business Goals:</strong> {formData.business_goals}</div>
+            <div><strong>Cards:</strong> {selectedCards.length} selected</div>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
 }
