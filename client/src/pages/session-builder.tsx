@@ -5,13 +5,15 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Loader2, Plus, Trash2, Edit, Clock, Save, BookOpen, AlertCircle } from "lucide-react";
+import { Loader2, Plus, Trash2, Edit, Clock, Save, BookOpen, AlertCircle, ArrowLeft, ArrowRight, Check, Users, Target, Settings, CreditCard } from "lucide-react";
 import { useCardStore, useIBOStore } from '../lib/store';
 import { useSessionStore } from '../lib/sessionStore';
 import { usePersonaStore } from '../lib/personaStore';
 import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Progress } from "@/components/ui/progress";
 
 interface SessionFormData {
   title: string;
@@ -21,6 +23,8 @@ interface SessionFormData {
   business_goals: string;
   cardIds: string[];
 }
+
+type BuilderStep = 'persona' | 'topic-goals' | 'modality' | 'cards' | 'review';
 
 export default function SessionBuilder() {
   const { cards, loading: cardsLoading, error: cardsError, loadCards } = useCardStore();
@@ -44,6 +48,7 @@ export default function SessionBuilder() {
   const { toast } = useToast();
   
   const [view, setView] = useState<'list' | 'create' | 'edit'>('list');
+  const [currentStep, setCurrentStep] = useState<BuilderStep>('persona');
   const [editingSession, setEditingSession] = useState<any>(null);
   
   // Form state
@@ -58,6 +63,19 @@ export default function SessionBuilder() {
 
   const [saving, setSaving] = useState(false);
   const [formErrors, setFormErrors] = useState<{[key: string]: string}>({});
+  const [filteredIBOs, setFilteredIBOs] = useState<any[]>([]);
+
+  const steps: { id: BuilderStep; title: string; description: string; icon: any }[] = [
+    { id: 'persona', title: 'Select Persona', description: 'Choose target audience', icon: Users },
+    { id: 'topic-goals', title: 'Topic & Goals', description: 'Define focus and outcomes', icon: Target },
+    { id: 'modality', title: 'Delivery Mode', description: 'Choose format', icon: Settings },
+    { id: 'cards', title: '4C Structure', description: 'Design learning flow', icon: CreditCard },
+    { id: 'review', title: 'Review & Create', description: 'Finalize session', icon: Check },
+  ];
+
+  const getStepIndex = (step: BuilderStep) => steps.findIndex(s => s.id === step);
+  const getCurrentStepIndex = () => getStepIndex(currentStep);
+  const getProgressPercentage = () => ((getCurrentStepIndex() + 1) / steps.length) * 100;
 
   useEffect(() => {
     const loadData = async () => {
@@ -106,6 +124,20 @@ export default function SessionBuilder() {
     }
   }, [ibosError, toast]);
 
+  // Filter IBOs based on selected persona and topic
+  useEffect(() => {
+    if (formData.persona_id && formData.topic) {
+      const filtered = ibos.filter(ibo => {
+        const matchesPersona = ibo.persona_id === formData.persona_id || !ibo.persona_id; // Include generic IBOs
+        const matchesTopic = ibo.topic?.toLowerCase().includes(formData.topic.toLowerCase());
+        return matchesPersona && matchesTopic;
+      });
+      setFilteredIBOs(filtered);
+    } else {
+      setFilteredIBOs([]);
+    }
+  }, [formData.persona_id, formData.topic, ibos]);
+
   const validateForm = (): boolean => {
     const errors: {[key: string]: string} = {};
     
@@ -144,11 +176,43 @@ export default function SessionBuilder() {
     });
     setEditingSession(null);
     setFormErrors({});
+    setCurrentStep('persona');
   };
 
   const handleCreateNew = () => {
     resetForm();
     setView('create');
+  };
+
+  const canProceedToNextStep = () => {
+    switch (currentStep) {
+      case 'persona':
+        return formData.persona_id !== '';
+      case 'topic-goals':
+        return formData.topic.trim() !== '' && formData.business_goals.trim() !== '';
+      case 'modality':
+        return formData.modality !== '';
+      case 'cards':
+        return formData.cardIds.length > 0;
+      case 'review':
+        return formData.title.trim() !== '';
+      default:
+        return false;
+    }
+  };
+
+  const handleNextStep = () => {
+    const currentIndex = getCurrentStepIndex();
+    if (currentIndex < steps.length - 1) {
+      setCurrentStep(steps[currentIndex + 1].id);
+    }
+  };
+
+  const handlePrevStep = () => {
+    const currentIndex = getCurrentStepIndex();
+    if (currentIndex > 0) {
+      setCurrentStep(steps[currentIndex - 1].id);
+    }
   };
 
   const handleEdit = (session: any) => {
