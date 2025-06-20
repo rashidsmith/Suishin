@@ -37,12 +37,15 @@ export default function SupabaseTest() {
 
     // Test server-side health check
     try {
-      const serverResult = await apiClient.get('/health') as any;
-      if (serverResult.status === 'ok' && serverResult.database === 'connected') {
+      const response = await fetch('/api/health');
+      const serverResult = await response.json();
+      
+      if (response.ok && serverResult.status === 'ok' && serverResult.database === 'connected') {
         setServerConnectionStatus('connected');
+        setServerError('');
       } else {
         setServerConnectionStatus('failed');
-        setServerError(serverResult.error || 'Database not connected');
+        setServerError(serverResult.error || serverResult.message || 'Database not connected');
       }
     } catch (error) {
       setServerConnectionStatus('failed');
