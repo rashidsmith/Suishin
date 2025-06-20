@@ -1,4 +1,4 @@
-import { pgTable, text, serial, integer, boolean, timestamp, uuid } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, integer, boolean, timestamp, uuid, jsonb } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -34,6 +34,8 @@ export const cards = pgTable("cards", {
   ibo_id: text("ibo_id").notNull(),
   learning_objective_id: text("learning_objective_id").notNull(),
   target_duration: integer("target_duration").notNull(), // in minutes
+  recommended_modalities: text("recommended_modalities"),
+  modality_notes: text("modality_notes"),
   created_at: timestamp("created_at").defaultNow().notNull(),
   updated_at: timestamp("updated_at").defaultNow().notNull(),
 });

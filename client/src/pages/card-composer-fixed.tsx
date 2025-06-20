@@ -26,6 +26,12 @@ interface CardFormData {
   learningObjectiveId: string;
   targetDuration: number;
   activities: Activity[];
+  recommendedModalities: ('onsite' | 'virtual' | 'hybrid')[];
+  modalityNotes: {
+    onsite?: string;
+    virtual?: string;
+    hybrid?: string;
+  };
 }
 
 const activityTypes = [

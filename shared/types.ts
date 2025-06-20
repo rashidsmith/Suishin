@@ -68,6 +68,12 @@ export interface Card {
   order_index: number;
   card_type: string;
   metadata?: Record<string, any>;
+  recommended_modalities?: ('onsite' | 'virtual' | 'hybrid')[];
+  modality_notes?: {
+    onsite?: string;      // Special considerations for in-person
+    virtual?: string;     // Adaptations needed for virtual
+    hybrid?: string;      // How to handle hybrid delivery
+  };
   created_at: string;
   updated_at: string;
 }
