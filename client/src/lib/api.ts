@@ -62,3 +62,6 @@ export const deleteIBO = async (id: string): Promise<void> => {
 
 // Export the configured axios instance for other API calls
 export default api;
+
+// Export as apiClient for backward compatibility
+export { api as apiClient };
