@@ -114,6 +114,8 @@ Changelog:
 - June 20, 2025. IBO Builder completed with comprehensive nested structure for Performance Metrics, Observable Behaviors, and Learning Objectives
 - June 20, 2025. Card Composer implemented with IBO/Learning Objective selection, activity management (C1-C4), and time tracking
 - June 20, 2025. Card Composer fully integrated with Supabase database - created cards and activities tables, fixed UUID constraints, resolved timebox field requirements, and verified complete CRUD functionality
+- June 20, 2025. Session Builder implemented with simple list interface for creating sessions, adding/removing cards, and tracking total duration
+- June 20, 2025. Export functionality completed with JSON/CSV format support, data validation, and download capabilities for IBOs, Cards, and Sessions
 
 ## User Preferences
 

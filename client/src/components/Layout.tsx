@@ -6,6 +6,7 @@ import {
   BookOpen, 
   CreditCard, 
   PlayCircle, 
+  Download,
   Menu,
   X
 } from "lucide-react";
@@ -24,6 +25,7 @@ export default function Layout({ children }: LayoutProps) {
     { name: 'IBO Builder', href: '/ibos', icon: BookOpen },
     { name: 'Card Composer', href: '/cards', icon: CreditCard },
     { name: 'Session Builder', href: '/session-builder', icon: PlayCircle },
+    { name: 'Export', href: '/export', icon: Download },
   ];
 
   const isActive = (path: string) => {

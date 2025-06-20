@@ -9,6 +9,7 @@ import IBOBuilder from "@/pages/ibo-builder";
 import CardComposer from "@/pages/card-composer-fixed";
 import Sessions from "@/pages/sessions";
 import SessionBuilder from "@/pages/session-builder";
+import Export from "@/pages/export";
 import Dashboard from "@/pages/dashboard";
 import SupabaseTest from "@/pages/supabase-test";
 import TypesTest from "@/pages/types-test";
@@ -27,6 +28,7 @@ function App() {
               <Route path="/cards" element={<CardComposer />} />
               <Route path="/sessions" element={<Sessions />} />
               <Route path="/session-builder" element={<SessionBuilder />} />
+              <Route path="/export" element={<Export />} />
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/supabase-test" element={<SupabaseTest />} />
               <Route path="/types-test" element={<TypesTest />} />
