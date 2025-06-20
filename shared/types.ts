@@ -108,6 +108,15 @@ export interface Session {
   topic: string;              // Required - what subject
   modality: 'onsite' | 'virtual' | 'hybrid';  // Required - how delivered
   business_goals: string;     // Session-specific outcomes
+  current_step?: string;      // Current step in session builder flow
+  completed_steps?: string[]; // Array of completed step IDs
+  generation_params?: {       // Context for AI regeneration
+    persona_context: string;
+    topic: string;
+    business_goals: string;
+    ai_provider: 'openai' | 'anthropic';
+    last_prompt?: string;
+  };
   started_at?: string;
   completed_at?: string;
   created_at: string;

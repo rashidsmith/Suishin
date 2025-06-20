@@ -81,6 +81,9 @@ export const sessions = pgTable("sessions", {
   topic: text("topic").notNull(),
   modality: text("modality").notNull(), // 'onsite' | 'virtual' | 'hybrid'
   business_goals: text("business_goals").notNull(),
+  current_step: text("current_step").default("persona"),
+  completed_steps: jsonb("completed_steps").default([]),
+  generation_params: jsonb("generation_params"),
   started_at: timestamp("started_at"),
   completed_at: timestamp("completed_at"),
   created_at: timestamp("created_at").defaultNow().notNull(),
