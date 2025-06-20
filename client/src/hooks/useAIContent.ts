@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { apiRequest } from '@/lib/queryClient';
+import { saveDraftIBOs, saveDraft4C } from '@/lib/api';
 
 interface AIContentState {
   generatedIBOs: string | null;
@@ -7,6 +8,7 @@ interface AIContentState {
   generatedActivities: string | null;
   isGenerating: boolean;
   error: string | null;
+  isLoaded: boolean;
 }
 
 export const useAIContent = (sessionId: string | null) => {
@@ -15,7 +17,8 @@ export const useAIContent = (sessionId: string | null) => {
     refinedIBOs: null,
     generatedActivities: null,
     isGenerating: false,
-    error: null
+    error: null,
+    isLoaded: false
   });
 
   // Load persisted AI content from database when sessionId changes
@@ -202,7 +205,8 @@ export const useAIContent = (sessionId: string | null) => {
       refinedIBOs: null,
       generatedActivities: null,
       isGenerating: false,
-      error: null
+      error: null,
+      isLoaded: true
     });
   };
 

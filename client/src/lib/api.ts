@@ -346,6 +346,53 @@ export const deletePersona = async (id: string): Promise<void> => {
   }
 };
 
+// AI Content Draft API functions
+export const saveDraftIBOs = async (sessionId: string, content: string) => {
+  try {
+    const response = await api.put(`/sessions/${sessionId}/draft-ibos`, {
+      content
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Error saving draft IBOs:', error);
+    throw error;
+  }
+};
+
+export const saveDraft4C = async (sessionId: string, content: string) => {
+  try {
+    const response = await api.put(`/sessions/${sessionId}/draft-activities`, {
+      content
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Error saving draft 4C activities:', error);
+    throw error;
+  }
+};
+
+export const lockIBOs = async (sessionId: string, iboContent: string) => {
+  try {
+    const response = await api.post(`/sessions/${sessionId}/lock-ibos`, {
+      iboContent
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Error locking IBOs:', error);
+    throw error;
+  }
+};
+
+export const unlockIBOs = async (sessionId: string) => {
+  try {
+    const response = await api.post(`/sessions/${sessionId}/unlock-ibos`);
+    return response.data;
+  } catch (error) {
+    console.error('Error unlocking IBOs:', error);
+    throw error;
+  }
+};
+
 // Export the configured axios instance for other API calls
 export default api;
 

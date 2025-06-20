@@ -1,0 +1,176 @@
+Update useAIContent Hook to Auto-Save Drafts
+Modify the existing hook to persist AI content to database.
+
+Update /client/src/hooks/useAIContent.ts:
+
+typescriptimport { useState, useEffect } from 'react';
+import { api } from '../lib/api';
+
+interface AIContentState {
+  generatedIBOs: string | null;
+  refinedIBOs: string | null;
+  generatedActivities: string | null;
+  isGenerating: boolean;
+  error: string | null;
+  isLoaded: boolean; // Track if we've loaded from database
+}
+
+export const useAIContent = (sessionId: string) => {
+  const [aiContent, setAIContent] = useState<AIContentState>({
+    generatedIBOs: null,
+    refinedIBOs: null,
+    generatedActivities: null,
+    isGenerating: false,
+    error: null,
+    isLoaded: false
+  });
+
+  // Load saved draft content on mount
+  useEffect(() => {
+    const loadDraftContent = async () => {
+      if (!sessionId || aiContent.isLoaded) return;
+      
+      try {
+        const session = await api.getSession(sessionId);
+        const updates: Partial<AIContentState> = { isLoaded: true };
+        
+        if (session.draft_ai_ibos) {
+          updates.generatedIBOs = session.draft_ai_ibos;
+          updates.refinedIBOs = session.draft_ai_ibos;
+        }
+        
+        if (session.draft_ai_activities) {
+          updates.generatedActivities = session.draft_ai_activities;
+        }
+        
+        setAIContent(prev => ({ ...prev, ...updates }));
+      } catch (error) {
+        console.error('Failed to load draft content:', error);
+        setAIContent(prev => ({ ...prev, isLoaded: true }));
+      }
+    };
+    
+    loadDraftContent();
+  }, [sessionId, aiContent.isLoaded]);
+
+  const generateIBOs = async () => {
+    setAIContent(prev => ({ ...prev, isGenerating: true, error: null }));
+    
+    try {
+      const response = await api.generateIBOs(sessionId);
+      const newContent = response.data.content;
+      
+      setAIContent(prev => ({
+        ...prev,
+        generatedIBOs: newContent,
+        refinedIBOs: newContent,
+        isGenerating: false
+      }));
+      
+      // Auto-save to database as draft
+      await api.saveDraftIBOs(sessionId, newContent);
+      
+      return { success: true };
+    } catch (error) {
+      setAIContent(prev => ({
+        ...prev,
+        isGenerating: false,
+        error: error.message
+      }));
+      return { success: false, error: error.message };
+    }
+  };
+
+  const updateRefinedIBOs = async (content: string) => {
+    setAIContent(prev => ({ ...prev, refinedIBOs: content }));
+    
+    // Auto-save refined content (debounced)
+    try {
+      await api.saveDraftIBOs(sessionId, content);
+    } catch (error) {
+      console.error('Failed to save draft:', error);
+    }
+  };
+
+  const refineIBOs = async (refinementRequest: string) => {
+    setAIContent(prev => ({ ...prev, isGenerating: true, error: null }));
+    
+    try {
+      const response = await api.refineIBOs(sessionId, {
+        currentContent: aiContent.refinedIBOs,
+        refinementRequest
+      });
+      
+      const refinedContent = response.data.content;
+      setAIContent(prev => ({
+        ...prev,
+        refinedIBOs: refinedContent,
+        isGenerating: false
+      }));
+      
+      // Auto-save refined content
+      await api.saveDraftIBOs(sessionId, refinedContent);
+      
+      return { success: true };
+    } catch (error) {
+      setAIContent(prev => ({
+        ...prev,
+        isGenerating: false,
+        error: error.message
+      }));
+      return { success: false, error: error.message };
+    }
+  };
+
+  const clearAIContent = () => {
+    setAIContent({
+      generatedIBOs: null,
+      refinedIBOs: null,
+      generatedActivities: null,
+      isGenerating: false,
+      error: null,
+      isLoaded: true
+    });
+  };
+
+  return {
+    aiContent,
+    generateIBOs,
+    updateRefinedIBOs,
+    refineIBOs,
+    clearAIContent
+  };
+};
+
+Add new API methods to /client/src/lib/api.ts:
+
+typescript// Add these methods to your existing api object:
+export const api = {
+  // existing methods...
+  
+  saveDraftIBOs: async (sessionId: string, content: string) => {
+    const response = await axios.put(`/sessions/${sessionId}/draft-ibos`, {
+      content
+    });
+    return response.data;
+  },
+
+  saveDraft4C: async (sessionId: string, content: string) => {
+    const response = await axios.put(`/sessions/${sessionId}/draft-activities`, {
+      content
+    });
+    return response.data;
+  },
+
+  lockIBOs: async (sessionId: string, iboContent: string) => {
+    const response = await axios.post(`/sessions/${sessionId}/lock-ibos`, {
+      iboContent
+    });
+    return response.data;
+  },
+
+  unlockIBOs: async (sessionId: string) => {
+    const response = await axios.post(`/sessions/${sessionId}/unlock-ibos`);
+    return response.data;
+  }
+};
