@@ -30,7 +30,7 @@ interface LearningObjective {
   orderIndex: number;
 }
 
-export default function IBOs() {
+export default function IBOBuilder() {
   const { 
     ibos, 
     loading, 
@@ -485,7 +485,7 @@ export default function IBOs() {
               </p>
             ) : (
               <div className="space-y-6">
-                {formData.performanceMetrics.map((metric, metricIndex) => (
+                {formData.performanceMetrics.map((metric) => (
                   <Card key={metric.id} className="bg-gray-50 border-gray-200">
                     <CardHeader className="pb-3">
                       <div className="flex justify-between items-start">
