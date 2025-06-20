@@ -5,31 +5,7 @@ export const getAllSessions = async (req: Request, res: Response) => {
   try {
     const { data: sessions, error } = await supabaseAdmin
       .from('sessions')
-      .select(`
-        *,
-        session_cards (
-          id,
-          card_id,
-          order_index,
-          viewed_at,
-          response_data,
-          is_completed,
-          cards (
-            id,
-            title,
-            description,
-            target_duration,
-            activities (
-              id,
-              title,
-              description,
-              type,
-              duration,
-              order_index
-            )
-          )
-        )
-      `)
+      .select('*')
       .order('created_at', { ascending: false });
 
     if (error) {
@@ -62,31 +38,7 @@ export const getSessionById = async (req: Request, res: Response) => {
 
     const { data: session, error } = await supabaseAdmin
       .from('sessions')
-      .select(`
-        *,
-        session_cards (
-          id,
-          card_id,
-          order_index,
-          viewed_at,
-          response_data,
-          is_completed,
-          cards (
-            id,
-            title,
-            description,
-            target_duration,
-            activities (
-              id,
-              title,
-              description,
-              type,
-              duration,
-              order_index
-            )
-          )
-        )
-      `)
+      .select('*')
       .eq('id', id)
       .single();
 
