@@ -113,6 +113,7 @@ Changelog:
 - June 20, 2025. React Router and Layout implementation with navigation between Home, IBOs, Cards, and Sessions pages
 - June 20, 2025. IBO Builder completed with comprehensive nested structure for Performance Metrics, Observable Behaviors, and Learning Objectives
 - June 20, 2025. Card Composer implemented with IBO/Learning Objective selection, activity management (C1-C4), and time tracking
+- June 20, 2025. Card Composer fully integrated with Supabase database - created cards and activities tables, fixed UUID constraints, resolved timebox field requirements, and verified complete CRUD functionality
 
 ## User Preferences
 

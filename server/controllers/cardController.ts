@@ -117,7 +117,8 @@ export const createCard = async (req: Request, res: Response) => {
         description,
         ibo_id,
         learning_objective_id,
-        target_duration
+        target_duration,
+        timebox: target_duration || 30  // Map target_duration to timebox field
       })
       .select()
       .single();
@@ -195,6 +196,7 @@ export const updateCard = async (req: Request, res: Response) => {
         ibo_id,
         learning_objective_id,
         target_duration,
+        timebox: target_duration || 30,  // Map target_duration to timebox field
         updated_at: new Date().toISOString()
       })
       .eq('id', id)
