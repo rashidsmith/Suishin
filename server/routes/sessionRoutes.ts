@@ -97,4 +97,80 @@ router.post('/:id/generate-ibos', async (req, res) => {
   }
 });
 
+// IBO refinement endpoint
+router.post('/:id/refine-ibos', async (req, res) => {
+  try {
+    console.log('[AI IBO Refinement] Starting for session:', req.params.id);
+    const { id } = req.params;
+    const { currentContent, refinementRequest } = req.body;
+
+    if (!currentContent || !refinementRequest) {
+      return res.status(400).json({ 
+        success: false, 
+        error: 'Current content and refinement request are required' 
+      });
+    }
+
+    // Get session data to extract generation parameters
+    const { data: session, error } = await supabaseAdmin
+      .from('sessions')
+      .select('*')
+      .eq('id', id)
+      .single();
+
+    if (error || !session) {
+      console.log('[AI IBO Refinement] Session not found:', error);
+      return res.status(404).json({ 
+        success: false, 
+        error: 'Session not found' 
+      });
+    }
+
+    // Parse generation parameters
+    let generationParams;
+    try {
+      generationParams = session.generation_params 
+        ? (typeof session.generation_params === 'string' 
+            ? JSON.parse(session.generation_params) 
+            : session.generation_params)
+        : {};
+    } catch (e) {
+      generationParams = {};
+    }
+
+    // Use session data if generation params are incomplete
+    const params = {
+      personaContext: generationParams.persona_context || session.persona_id,
+      topic: generationParams.topic || session.topic,
+      businessGoals: generationParams.business_goals || session.business_goals,
+      aiProvider: generationParams.ai_provider || 'openai'
+    };
+
+    console.log('[AI IBO Refinement] Refinement request:', refinementRequest);
+
+    const result = await aiService.refineIBOs(currentContent, refinementRequest, params);
+    
+    console.log('[AI IBO Refinement] Result received:', result.success);
+    
+    if (result.success) {
+      res.json({ 
+        success: true, 
+        content: result.content,
+        timestamp: result.timestamp
+      });
+    } else {
+      res.status(400).json({ 
+        success: false, 
+        error: result.error 
+      });
+    }
+  } catch (error) {
+    console.error('[AI IBO Refinement] Error:', error);
+    res.status(500).json({ 
+      success: false, 
+      error: error.message 
+    });
+  }
+});
+
 export default router;

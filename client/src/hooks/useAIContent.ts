@@ -61,6 +61,51 @@ export const useAIContent = (sessionId: string | null) => {
     }
   };
 
+  const refineIBOs = async (refinementRequest: string) => {
+    if (!sessionId || !aiContent.refinedIBOs) {
+      setAIContent(prev => ({ 
+        ...prev, 
+        error: 'No content to refine or session ID missing' 
+      }));
+      return { success: false, error: 'No content to refine or session ID missing' };
+    }
+
+    setAIContent(prev => ({ ...prev, isGenerating: true, error: null }));
+    
+    try {
+      const response = await apiRequest(
+        'POST',
+        `/api/sessions/${sessionId}/refine-ibos`,
+        {
+          currentContent: aiContent.refinedIBOs,
+          refinementRequest: refinementRequest
+        }
+      );
+
+      const data = await response.json();
+
+      if (!data.success) {
+        throw new Error(data.error || 'Failed to refine IBOs');
+      }
+
+      setAIContent(prev => ({
+        ...prev,
+        refinedIBOs: data.content,
+        isGenerating: false
+      }));
+      
+      return { success: true };
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+      setAIContent(prev => ({
+        ...prev,
+        isGenerating: false,
+        error: errorMessage
+      }));
+      return { success: false, error: errorMessage };
+    }
+  };
+
   const updateRefinedIBOs = (content: string) => {
     setAIContent(prev => ({ ...prev, refinedIBOs: content }));
   };
@@ -78,6 +123,7 @@ export const useAIContent = (sessionId: string | null) => {
   return {
     aiContent,
     generateIBOs,
+    refineIBOs,
     updateRefinedIBOs,
     clearAIContent
   };

@@ -1,8 +1,10 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { useAIContent } from "@/hooks/useAIContent";
-import { Loader2, RefreshCw, CheckCircle } from "lucide-react";
+import { Loader2, RefreshCw, CheckCircle, Edit3, Target, BookOpen, Briefcase, Lightbulb } from "lucide-react";
 import { useState } from "react";
 
 interface GenerateIBOsStepProps {
@@ -11,9 +13,11 @@ interface GenerateIBOsStepProps {
 }
 
 export const GenerateIBOsStep = ({ sessionId, onStepComplete }: GenerateIBOsStepProps) => {
-  const { aiContent, generateIBOs, updateRefinedIBOs } = useAIContent(sessionId);
+  const { aiContent, generateIBOs, refineIBOs, updateRefinedIBOs } = useAIContent(sessionId);
   const [isEditing, setIsEditing] = useState(false);
   const [editedContent, setEditedContent] = useState("");
+  const [customRefinementRequest, setCustomRefinementRequest] = useState("");
+  const [showRefinementOptions, setShowRefinementOptions] = useState(false);
 
   const handleGenerate = async () => {
     const result = await generateIBOs();
@@ -39,6 +43,40 @@ export const GenerateIBOsStep = ({ sessionId, onStepComplete }: GenerateIBOsStep
     setEditedContent("");
     setIsEditing(false);
   };
+
+  const handleRefinement = async (request: string) => {
+    const result = await refineIBOs(request);
+    if (result.success) {
+      setCustomRefinementRequest("");
+    }
+  };
+
+  const refinementOptions = [
+    {
+      icon: Target,
+      title: "More Specific",
+      description: "Make objectives more specific and measurable",
+      request: "Make the objectives more specific and measurable with clear success criteria"
+    },
+    {
+      icon: BookOpen,
+      title: "Simplify",
+      description: "Simplify for beginner level understanding",
+      request: "Simplify the language and concepts for beginner-level learners"
+    },
+    {
+      icon: Briefcase,
+      title: "Business Impact",
+      description: "Focus on immediate business impact",
+      request: "Focus more on immediate business impact and ROI for the organization"
+    },
+    {
+      icon: Lightbulb,
+      title: "More Practical",
+      description: "Add practical application examples",
+      request: "Add more practical application examples and real-world scenarios"
+    }
+  ];
 
   if (aiContent.generatedIBOs) {
     return (
@@ -94,6 +132,14 @@ export const GenerateIBOsStep = ({ sessionId, onStepComplete }: GenerateIBOsStep
                   </Button>
                   <Button onClick={handleEdit} variant="outline">
                     Edit Content
+                  </Button>
+                  <Button 
+                    onClick={() => setShowRefinementOptions(!showRefinementOptions)} 
+                    variant="outline"
+                    className="flex items-center gap-2"
+                  >
+                    <Edit3 className="h-4 w-4" />
+                    Refine with AI
                   </Button>
                   <Button onClick={() => onStepComplete('generate-ibos')}>
                     Continue to Activities

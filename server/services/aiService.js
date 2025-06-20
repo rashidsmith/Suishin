@@ -203,6 +203,44 @@ Format as structured markdown with clear hierarchy.`;
     }
   }
 
+  async refineIBOs(currentContent, refinementRequest, generationParams) {
+    const { personaContext, topic, businessGoals, aiProvider } = generationParams;
+    
+    const prompt = `You are an expert learning designer. Refine the following IBOs based on the specific request:
+
+ORIGINAL CONTEXT:
+PERSONA: ${personaContext}
+TOPIC: ${topic}  
+BUSINESS GOALS: ${businessGoals}
+
+CURRENT IBO CONTENT:
+${currentContent}
+
+REFINEMENT REQUEST:
+${refinementRequest}
+
+Please refine the IBOs according to the request while maintaining the structured hierarchy and ensuring alignment with the original context. Keep the same format but improve based on the specific refinement requested.`;
+
+    try {
+      console.log('[AI Service] Refining IBOs with request:', refinementRequest);
+      const response = await this.callAI(prompt, aiProvider || 'openai');
+      console.log('[AI Service] Refinement response received, length:', response?.length || 0);
+      return {
+        success: true,
+        content: response,
+        refinementRequest,
+        timestamp: new Date().toISOString()
+      };
+    } catch (error) {
+      console.error('[AI Service] Refinement error:', error.message);
+      return {
+        success: false,
+        error: error.message,
+        refinementRequest
+      };
+    }
+  }
+
   getAvailableProviders() {
     const providers = [];
     
