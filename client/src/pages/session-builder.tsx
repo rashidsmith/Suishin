@@ -7,7 +7,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Loader2, Plus, Trash2, Edit, Calendar, Clock, Save, BookOpen } from "lucide-react";
-import { useCardStore } from '../lib/store';
+import { useCardStore, useIBOStore } from '../lib/store';
+import { useSessionStore } from '../lib/sessionStore';
+import { useToast } from '@/hooks/use-toast';
 
 interface SessionCard {
   id: string;
@@ -39,12 +41,21 @@ interface SessionFormData {
 
 export default function SessionBuilder() {
   const { cards, loading: cardsLoading, loadCards } = useCardStore();
+  const { ibos, loadIBOs } = useIBOStore();
+  const { 
+    sessions, 
+    loading: sessionsLoading, 
+    error: sessionsError, 
+    loadSessions, 
+    createSession, 
+    updateSession, 
+    deleteSession,
+    clearError 
+  } = useSessionStore();
+  const { toast } = useToast();
   
-  const [sessions, setSessions] = useState<Session[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const [view, setView] = useState<'list' | 'create' | 'edit'>('list');
-  const [editingSession, setEditingSession] = useState<Session | null>(null);
+  const [editingSession, setEditingSession] = useState<any>(null);
   
   // Form state
   const [formData, setFormData] = useState<SessionFormData>({
@@ -57,30 +68,20 @@ export default function SessionBuilder() {
 
   useEffect(() => {
     loadCards();
+    loadIBOs();
     loadSessions();
-  }, [loadCards]);
+  }, [loadCards, loadIBOs, loadSessions]);
 
-  const loadSessions = async () => {
-    setLoading(true);
-    try {
-      // Mock sessions for now - in real app, this would be an API call
-      const mockSessions: Session[] = [
-        {
-          id: '1',
-          title: 'Introduction to Learning',
-          description: 'Basic concepts and principles',
-          status: 'not_started',
-          created_at: new Date().toISOString(),
-          session_cards: []
-        }
-      ];
-      setSessions(mockSessions);
-    } catch (err) {
-      setError('Failed to load sessions');
-    } finally {
-      setLoading(false);
+  useEffect(() => {
+    if (sessionsError) {
+      toast({
+        title: "Error",
+        description: sessionsError,
+        variant: "destructive",
+      });
+      clearError();
     }
-  };
+  }, [sessionsError, toast, clearError]);
 
   const resetForm = () => {
     setFormData({
@@ -108,37 +109,30 @@ export default function SessionBuilder() {
 
   const handleSaveSession = async () => {
     if (!formData.title.trim()) {
-      setError('Session title is required');
+      toast({
+        title: "Error",
+        description: "Session title is required",
+        variant: "destructive",
+      });
       return;
     }
 
     setSaving(true);
     try {
-      const sessionData = {
-        title: formData.title,
-        description: formData.description,
-        status: 'not_started' as const,
-        session_cards: formData.cardIds.map((cardId, index) => ({
-          id: `sc_${Date.now()}_${index}`,
-          card_id: cardId,
-          order_index: index,
-          card: cards.find(c => c.id === cardId)!
-        }))
-      };
-
       if (view === 'create') {
-        // Create new session
-        const newSession: Session = {
-          id: Date.now().toString(),
-          ...sessionData,
-          created_at: new Date().toISOString()
-        };
-        setSessions(prev => [newSession, ...prev]);
+        await createSession({
+          user_id: 'user-1', // In real app, this would come from auth
+          learning_objective_id: ibos[0]?.id || 'default-lo-id',
+          title: formData.title,
+          description: formData.description,
+          card_ids: formData.cardIds
+        });
       } else if (editingSession) {
-        // Update existing session
-        setSessions(prev => prev.map(s => 
-          s.id === editingSession.id 
-            ? { ...editingSession, ...sessionData }
+        await updateSession(editingSession.id, {
+          title: formData.title,
+          description: formData.description,
+          card_ids: formData.cardIds
+        });
             : s
         ));
       }
