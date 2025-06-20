@@ -49,7 +49,7 @@ export default function Layout({ children }: LayoutProps) {
                   <BookOpen className="w-5 h-5 text-white" />
                 </div>
                 <h1 className="text-xl font-bold text-gray-900">
-                  Learning Architect
+                  Suishin
                 </h1>
               </div>
 
@@ -130,7 +130,7 @@ export default function Layout({ children }: LayoutProps) {
       <footer className="bg-white border-t border-gray-200 mt-auto">
         <div className="max-w-7xl mx-auto py-4 px-4 sm:px-6 lg:px-8">
           <p className="text-center text-sm text-gray-500">
-            Learning Architect - Build engaging learning experiences
+            Suishin - Build engaging learning experiences
           </p>
         </div>
       </footer>

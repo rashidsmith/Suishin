@@ -117,6 +117,7 @@ Changelog:
 - June 20, 2025. Session Builder implemented with simple list interface for creating sessions, adding/removing cards, and tracking total duration
 - June 20, 2025. Export functionality completed with JSON/CSV format support, data validation, and download capabilities for IBOs, Cards, and Sessions
 - June 20, 2025. Complete application testing and deployment readiness achieved - all API endpoints functional, comprehensive user journey verified from IBO creation through Card composition to Session building, database schema finalized, and all components working seamlessly together
+- June 20, 2025. Performance Metrics and Observable Behaviors database integration completed - created API controllers, routes, and client functions for full CRUD operations, updated IBO Builder to save/load nested PM/OB data to Supabase, verified complete data persistence and retrieval functionality
 
 ## User Preferences
 
