@@ -184,7 +184,9 @@ Generate 3-4 Business Objectives, each with:
 Format as structured markdown with clear hierarchy.`;
 
     try {
+      console.log('[AI Service] Calling AI provider:', aiProvider);
       const response = await this.callAI(prompt, aiProvider);
+      console.log('[AI Service] AI response received, length:', response?.length || 0);
       return {
         success: true,
         content: response,
@@ -192,6 +194,7 @@ Format as structured markdown with clear hierarchy.`;
         timestamp: new Date().toISOString()
       };
     } catch (error) {
+      console.error('[AI Service] Generation error:', error.message);
       return {
         success: false,
         error: error.message,

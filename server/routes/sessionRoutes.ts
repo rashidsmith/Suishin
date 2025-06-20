@@ -26,35 +26,7 @@ router.put('/:id/progress', updateSessionProgress);
 // Session card relationship routes
 router.put('/:sessionId/cards/:cardId', updateSessionCard);
 
-// Test AI endpoint to verify service is working
-router.post('/:id/test-ai', async (req, res) => {
-  try {
-    console.log('[AI Test] Testing AI service...');
-    
-    const testParams = {
-      personaContext: "Test Persona",
-      topic: "Test Topic", 
-      businessGoals: "Test Goals",
-      aiProvider: "openai"
-    };
-
-    const result = await aiService.generateIBOs(testParams);
-    
-    res.json({
-      success: true,
-      testResult: result,
-      message: "AI test completed"
-    });
-  } catch (error) {
-    console.error('[AI Test] Error:', error);
-    res.status(500).json({ 
-      success: false, 
-      error: error.message 
-    });
-  }
-});
-
-// AI IBO generation endpoint
+// AI IBO generation endpoint - place before generic :id route
 router.post('/:id/generate-ibos', async (req, res) => {
   try {
     console.log('[AI IBO Generation] Starting for session:', req.params.id);
