@@ -78,58 +78,32 @@ export const useAIContent = (sessionId: string | null) => {
   };
 
   const refineIBOs = async (refinementRequest: string) => {
-    if (!sessionId || !aiContent.refinedIBOs) {
-      setAIContent(prev => ({ 
-        ...prev, 
-        error: 'No content to refine or session ID missing' 
-      }));
-      return { success: false, error: 'No content to refine or session ID missing' };
-    }
-
     setAIContent(prev => ({ ...prev, isGenerating: true, error: null }));
     
     try {
-      const response = await apiRequest(
-        'POST',
-        `/api/sessions/${sessionId}/refine-ibos`,
-        {
-          currentContent: aiContent.refinedIBOs,
-          refinementRequest: refinementRequest
-        }
-      );
-
-      const data = await response.json();
-
-      if (!data.success) {
-        throw new Error(data.error || 'Failed to refine IBOs');
-      }
-
+      const response = await api.refineIBOs(sessionId, {
+        currentContent: aiContent.refinedIBOs,
+        refinementRequest
+      });
+      
+      const refinedContent = response.content;
       setAIContent(prev => ({
         ...prev,
-        refinedIBOs: data.content,
+        refinedIBOs: refinedContent,
         isGenerating: false
       }));
 
-      // Persist refined content to database
-      await fetch(`/api/sessions/${sessionId}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          draft_ai_ibos: data.content
-        })
-      });
+      // Auto-save refined content to database
+      await api.saveDraftIBOs(sessionId, refinedContent);
       
       return { success: true };
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
       setAIContent(prev => ({
         ...prev,
         isGenerating: false,
-        error: errorMessage
+        error: error.message
       }));
-      return { success: false, error: errorMessage };
+      return { success: false, error: error.message };
     }
   };
 
