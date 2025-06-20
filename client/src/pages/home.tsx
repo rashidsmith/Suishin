@@ -2,30 +2,37 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { 
   CheckCircle, 
-  Server, 
   Database, 
-  Code, 
-  Play,
   Plus,
-  Users,
   BookOpen,
   CreditCard,
   PlayCircle,
-  ArrowRight
+  ArrowRight,
+  Target,
+  FileText,
+  Download,
+  Loader2,
+  AlertCircle,
+  Sparkles
 } from "lucide-react";
 import { apiClient } from '../lib/api';
-import { useAppStore } from '../lib/store';
+import { useIBOStore, useCardStore } from '../lib/store';
+import { useSessionStore } from '../lib/sessionStore';
+import { useToast } from '@/hooks/use-toast';
 
 export default function Home() {
   const [isLoading, setIsLoading] = useState(false);
   const [apiStatus, setApiStatus] = useState<string>('checking...');
-  const [userName, setUserName] = useState('');
-  const [userEmail, setUserEmail] = useState('');
-  const { user, setUser, setLoading } = useAppStore();
+  const [creatingDemo, setCreatingDemo] = useState(false);
+  const [demoCreated, setDemoCreated] = useState(false);
+  const { createIBO, loadIBOs } = useIBOStore();
+  const { createCard, loadCards } = useCardStore();
+  const { createSession, loadSessions } = useSessionStore();
+  const { toast } = useToast();
 
   // Test API connection
   useEffect(() => {
@@ -40,25 +47,66 @@ export default function Home() {
     testApi();
   }, []);
 
-  const handleCreateUser = async () => {
-    if (!userName || !userEmail) return;
-    
-    setIsLoading(true);
+  const createSampleData = async () => {
+    setCreatingDemo(true);
     try {
-      const response = await apiClient.post('/users', {
-        username: userName,
-        email: userEmail
-      });
+      // Create sample IBO
+      await createIBO('Digital Marketing Fundamentals', 'Learn the essentials of digital marketing strategy, social media management, and content creation');
       
-      if (response.data) {
-        setUser(response.data as any);
-        setUserName('');
-        setUserEmail('');
-      }
+      // Load IBOs to get the created one
+      await loadIBOs();
+      
+      // Create sample Card
+      await createCard({
+        title: 'Social Media Strategy Basics',
+        description: 'Understanding platform-specific strategies for maximum engagement',
+        ibo_id: 'sample-ibo-id',
+        learning_objective_id: 'sample-lo-id',
+        target_duration: 45,
+        activities: [
+          {
+            title: 'Platform Analysis',
+            description: 'Analyze different social media platforms and their audiences',
+            type: 'C1' as const,
+            duration: 15
+          },
+          {
+            title: 'Content Planning',
+            description: 'Create a content calendar for social media posts',
+            type: 'C2' as const,
+            duration: 20
+          },
+          {
+            title: 'Engagement Strategies',
+            description: 'Develop techniques for increasing audience engagement',
+            type: 'C3' as const,
+            duration: 10
+          }
+        ]
+      });
+
+      // Create sample Session
+      await createSession({
+        user_id: 'demo-user',
+        learning_objective_id: 'sample-lo-id',
+        title: 'Introduction to Digital Marketing',
+        description: 'Complete learning session covering digital marketing basics',
+        card_ids: []
+      });
+
+      setDemoCreated(true);
+      toast({
+        title: "Demo Data Created!",
+        description: "Sample IBO, Card, and Session have been created. Explore the application now.",
+      });
     } catch (error) {
-      console.error('Failed to create user:', error);
+      toast({
+        title: "Error Creating Demo Data",
+        description: error instanceof Error ? error.message : "Failed to create sample data",
+        variant: "destructive",
+      });
     } finally {
-      setIsLoading(false);
+      setCreatingDemo(false);
     }
   };
 
