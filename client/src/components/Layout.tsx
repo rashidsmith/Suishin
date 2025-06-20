@@ -7,6 +7,7 @@ import {
   CreditCard, 
   PlayCircle, 
   Download,
+  Users,
   Menu,
   X
 } from "lucide-react";
