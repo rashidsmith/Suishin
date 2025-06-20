@@ -3,6 +3,7 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { testTypes } from "./routes/types-test";
 import { getSchemaInfo } from "./routes/schema-info";
+import { setupDatabase } from "./routes/db-setup";
 import iboRoutes from "./routes/iboRoutes";
 import cardRoutes from "./routes/cardRoutes";
 
@@ -15,6 +16,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Add schema info endpoint
   app.get("/api/schema-info", getSchemaInfo);
+
+  // Add database setup endpoint
+  app.post("/api/setup-database", setupDatabase);
 
   // Add IBO routes
   app.use("/api/ibos", iboRoutes);
