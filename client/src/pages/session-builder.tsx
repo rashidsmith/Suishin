@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Plus, BookOpen, Trash2, Users, Target, Settings, CreditCard, Check, ArrowLeft, ArrowRight, Save, Loader2, Wand2, Brain, Lightbulb } from "lucide-react";
+import { GenerateIBOsStep } from '../components/GenerateIBOsStep';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Progress } from "@/components/ui/progress";
@@ -798,129 +799,11 @@ export default function SessionBuilder() {
 
   // Step 4: AI Generation
   function renderAIGenerationStep() {
-    const selectedPersona = personas.find(p => p.id === formData.persona_id);
-
     return (
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Wand2 className="w-5 h-5" />
-            AI-Powered Content Generation
-          </CardTitle>
-          <p className="text-muted-foreground">Generate persona-aware IBOs and 4C activity structure</p>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          {!generatedContent ? (
-            <div className="text-center space-y-4">
-              <div className="p-4 bg-blue-50 rounded-lg">
-                <Brain className="w-12 h-12 mx-auto mb-3 text-blue-600" />
-                <h3 className="text-lg font-semibold mb-2">Ready to Generate Session Structure</h3>
-                <p className="text-sm text-gray-600 mb-4">
-                  AI will create tailored IBOs and 4C activities based on your persona, topic, and modality selections.
-                </p>
-                <div className="space-y-2 text-sm text-left">
-                  <div><strong>Persona:</strong> {selectedPersona?.name}</div>
-                  <div><strong>Topic:</strong> {formData.topic}</div>
-                  <div><strong>Modality:</strong> {formData.modality}</div>
-                  <div><strong>Business Goals:</strong> {formData.business_goals}</div>
-                </div>
-              </div>
-              
-              <Button
-                onClick={generateSessionStructure}
-                disabled={isGenerating}
-                className="w-full"
-                size="lg"
-              >
-                {isGenerating ? (
-                  <>
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    Generating Session Structure...
-                  </>
-                ) : (
-                  <>
-                    <Wand2 className="w-4 h-4 mr-2" />
-                    Generate Session Structure
-                  </>
-                )}
-              </Button>
-            </div>
-          ) : (
-            <div className="space-y-6">
-              <div className="flex items-center justify-between">
-                <h3 className="text-lg font-semibold text-green-700">Session Structure Generated!</h3>
-                <Button
-                  variant="outline"
-                  onClick={() => setGeneratedContent(null)}
-                  size="sm"
-                >
-                  Regenerate
-                </Button>
-              </div>
-
-              {/* Generated IBOs */}
-              <div>
-                <h4 className="font-semibold mb-3 flex items-center gap-2">
-                  <Target className="w-4 h-4" />
-                  Generated IBOs ({generatedContent.ibos.length})
-                </h4>
-                <div className="space-y-2">
-                  {generatedContent.ibos.map((ibo, index) => (
-                    <div key={index} className="p-3 bg-green-50 rounded border-l-4 border-green-400">
-                      <div className="font-medium text-green-900">{ibo.title}</div>
-                      <div className="text-sm text-green-700 mt-1">{ibo.description}</div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Generated 4C Activities */}
-              <div>
-                <h4 className="font-semibold mb-3 flex items-center gap-2">
-                  <CreditCard className="w-4 h-4" />
-                  Generated 4C Activities ({generatedContent.activities.length})
-                </h4>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                  {generatedContent.activities.map((activity, index) => (
-                    <div key={index} className="p-3 bg-blue-50 rounded border">
-                      <div className="flex items-center gap-2 mb-2">
-                        <div className={`w-3 h-3 rounded-full ${
-                          activity.type === 'connection' ? 'bg-yellow-400' :
-                          activity.type === 'concept' ? 'bg-blue-400' :
-                          activity.type === 'concrete_practice' ? 'bg-green-400' :
-                          'bg-purple-400'
-                        }`} />
-                        <span className="font-medium text-sm capitalize">
-                          {activity.type.replace('_', ' ')}
-                        </span>
-                        <span className="text-xs text-gray-500">
-                          {activity.estimated_duration}min
-                        </span>
-                      </div>
-                      <div className="font-medium text-blue-900">{activity.title}</div>
-                      <div className="text-sm text-blue-700 mt-1">{activity.description}</div>
-                      {activity.materials && activity.materials.length > 0 && (
-                        <div className="text-xs text-gray-600 mt-2">
-                          <strong>Materials:</strong> {activity.materials.join(', ')}
-                        </div>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* AI Rationale */}
-              <div className="p-4 bg-gray-50 rounded-lg">
-                <h4 className="font-semibold mb-2 flex items-center gap-2">
-                  <Lightbulb className="w-4 h-4" />
-                  AI Design Rationale
-                </h4>
-                <p className="text-sm text-gray-700">{generatedContent.rationale}</p>
-              </div>
-            </div>
-          )}
-        </CardContent>
-      </Card>
+      <GenerateIBOsStep 
+        sessionId={editingSession?.id || null}
+        onStepComplete={stepHook.updateStep}
+      />
     );
   }
 

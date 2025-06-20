@@ -1,0 +1,106 @@
+Add React State for AI Content
+Handle AI-generated content in React state, not database.
+
+Create AI content store:
+
+typescript// /client/src/hooks/useAIContent.js
+export const useAIContent = (sessionId) => {
+  const [aiContent, setAIContent] = useState({
+    generatedIBOs: null,
+    refinedIBOs: null,
+    generatedActivities: null,
+    isGenerating: false,
+    error: null
+  });
+
+  const generateIBOs = async () => {
+    setAIContent(prev => ({ ...prev, isGenerating: true, error: null }));
+    
+    try {
+      const response = await api.generateIBOs(sessionId);
+      setAIContent(prev => ({
+        ...prev,
+        generatedIBOs: response.data.content,
+        refinedIBOs: response.data.content, // Start with generated content
+        isGenerating: false
+      }));
+      return { success: true };
+    } catch (error) {
+      setAIContent(prev => ({
+        ...prev,
+        isGenerating: false,
+        error: error.message
+      }));
+      return { success: false, error: error.message };
+    }
+  };
+
+  const updateRefinedIBOs = (content) => {
+    setAIContent(prev => ({ ...prev, refinedIBOs: content }));
+  };
+
+  const clearAIContent = () => {
+    setAIContent({
+      generatedIBOs: null,
+      refinedIBOs: null,
+      generatedActivities: null,
+      isGenerating: false,
+      error: null
+    });
+  };
+
+  return {
+    aiContent,
+    generateIBOs,
+    updateRefinedIBOs,
+    clearAIContent
+  };
+};
+
+Update "Generate IBOs" step:
+
+typescript// /client/src/components/GenerateIBOsStep.jsx
+const GenerateIBOsStep = ({ sessionId, onStepComplete }) => {
+  const { aiContent, generateIBOs } = useAIContent(sessionId);
+  
+  const handleGenerate = async () => {
+    const result = await generateIBOs();
+    if (result.success) {
+      onStepComplete('generate-ibos');
+    }
+  };
+
+  if (aiContent.generatedIBOs) {
+    return (
+      <div>
+        <h3>Generated IBOs</h3>
+        <div className="bg-gray-50 p-4 rounded">
+          <pre className="whitespace-pre-wrap">{aiContent.generatedIBOs}</pre>
+        </div>
+        <div className="flex space-x-2 mt-4">
+          <button onClick={handleGenerate}>Regenerate</button>
+          <button onClick={() => onStepComplete('generate-ibos')}>
+            Continue to Refinement
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div>
+      <h3>Generate Learning Objectives</h3>
+      <p>AI will create complete IBOs based on your persona and topic.</p>
+      <button 
+        onClick={handleGenerate}
+        disabled={aiContent.isGenerating}
+      >
+        {aiContent.isGenerating ? 'Generating...' : 'Generate IBOs'}
+      </button>
+      {aiContent.error && (
+        <div className="text-red-600 mt-2">{aiContent.error}</div>
+      )}
+    </div>
+  );
+};
+Test: Can generate IBOs, content stays in React state, error handling works.
