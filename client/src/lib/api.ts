@@ -1,61 +1,64 @@
 import axios from 'axios';
-import { ApiResponse } from '../types';
+import { IBO, CreateIBORequest } from '../types';
 
-// Create axios instance with base configuration
+// Configure axios with base URL
 const api = axios.create({
   baseURL: '/api',
   headers: {
     'Content-Type': 'application/json',
   },
+  withCredentials: true,
 });
 
-// Request interceptor
-api.interceptors.request.use(
-  (config) => {
-    // Add any auth tokens here if needed
-    return config;
-  },
-  (error) => {
-    return Promise.reject(error);
+// IBO API functions
+export const fetchIBOs = async (): Promise<IBO[]> => {
+  try {
+    const response = await api.get('/ibos');
+    return response.data.data || [];
+  } catch (error) {
+    console.error('Error fetching IBOs:', error);
+    throw error;
   }
-);
-
-// Response interceptor
-api.interceptors.response.use(
-  (response) => {
-    return response;
-  },
-  (error) => {
-    // Handle common errors
-    if (error.response?.status === 401) {
-      // Handle unauthorized access
-      console.error('Unauthorized access');
-    }
-    return Promise.reject(error);
-  }
-);
-
-// API functions
-export const apiClient = {
-  get: async <T>(url: string): Promise<ApiResponse<T>> => {
-    const response = await api.get(url);
-    return response.data;
-  },
-
-  post: async <T>(url: string, data: any): Promise<ApiResponse<T>> => {
-    const response = await api.post(url, data);
-    return response.data;
-  },
-
-  put: async <T>(url: string, data: any): Promise<ApiResponse<T>> => {
-    const response = await api.put(url, data);
-    return response.data;
-  },
-
-  delete: async <T>(url: string): Promise<ApiResponse<T>> => {
-    const response = await api.delete(url);
-    return response.data;
-  },
 };
 
+export const fetchIBOById = async (id: string): Promise<IBO> => {
+  try {
+    const response = await api.get(`/ibos/${id}`);
+    return response.data.data;
+  } catch (error) {
+    console.error('Error fetching IBO:', error);
+    throw error;
+  }
+};
+
+export const createIBO = async (iboData: CreateIBORequest): Promise<IBO> => {
+  try {
+    const response = await api.post('/ibos', iboData);
+    return response.data.data;
+  } catch (error) {
+    console.error('Error creating IBO:', error);
+    throw error;
+  }
+};
+
+export const updateIBO = async (id: string, iboData: Partial<CreateIBORequest>): Promise<IBO> => {
+  try {
+    const response = await api.put(`/ibos/${id}`, iboData);
+    return response.data.data;
+  } catch (error) {
+    console.error('Error updating IBO:', error);
+    throw error;
+  }
+};
+
+export const deleteIBO = async (id: string): Promise<void> => {
+  try {
+    await api.delete(`/ibos/${id}`);
+  } catch (error) {
+    console.error('Error deleting IBO:', error);
+    throw error;
+  }
+};
+
+// Export the configured axios instance for other API calls
 export default api;
