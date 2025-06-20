@@ -8,6 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Separator } from "@/components/ui/separator";
 import { Loader2, Plus, Trash2, Edit, BookOpen, Save, X, ArrowLeft } from "lucide-react";
 import { useIBOStore } from '../lib/store';
+import { usePersonaStore } from '../lib/personaStore';
 import { 
   createPerformanceMetric, 
   createObservableBehavior,
@@ -16,6 +17,7 @@ import {
   deletePerformanceMetric,
   deleteObservableBehavior 
 } from '../lib/api';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 interface PerformanceMetric {
   id: string;
@@ -50,8 +52,12 @@ export default function IBOBuilder() {
     clearError 
   } = useIBOStore();
 
+  const { personas, loadPersonas } = usePersonaStore();
+
   const [view, setView] = useState<'list' | 'edit' | 'create'>('list');
   const [editingIBO, setEditingIBO] = useState<any>(null);
+  const [selectedPersonaId, setSelectedPersonaId] = useState<string>('all');
+  const [topicFilter, setTopicFilter] = useState<string>('');
   
   // Form state
   const [formData, setFormData] = useState({
@@ -59,6 +65,8 @@ export default function IBOBuilder() {
     wiifmIndividual: '',
     wiifmOrganization: '',
     description: '',
+    persona_id: '',
+    topic: '',
     performanceMetrics: [] as PerformanceMetric[]
   });
 

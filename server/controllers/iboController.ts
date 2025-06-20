@@ -178,9 +178,17 @@ export const updateIBO = async (req: Request, res: Response) => {
       return res.status(400).json(errorResponse);
     }
 
-    const updateData: Partial<IBO> = {};
+    const updateData: any = {};
     if (title) updateData.title = title;
     if (description) updateData.description = description;
+    if (topic !== undefined) updateData.topic = topic;
+    if (persona_id !== undefined) {
+      if (persona_id === 'generic' || persona_id === '') {
+        updateData.persona_id = null;
+      } else {
+        updateData.persona_id = persona_id;
+      }
+    }
 
     const { data: ibo, error } = await supabaseAdmin
       .from('ibos')

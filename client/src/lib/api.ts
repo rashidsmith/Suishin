@@ -11,9 +11,18 @@ const api = axios.create({
 });
 
 // IBO API functions
-export const fetchIBOs = async (): Promise<IBO[]> => {
+export const fetchIBOs = async (params?: { personaId?: string; topic?: string }): Promise<IBO[]> => {
   try {
-    const response = await api.get('/ibos');
+    const queryParams = new URLSearchParams();
+    if (params?.personaId) {
+      queryParams.append('personaId', params.personaId);
+    }
+    if (params?.topic) {
+      queryParams.append('topic', params.topic);
+    }
+    
+    const url = queryParams.toString() ? `/ibos?${queryParams.toString()}` : '/ibos';
+    const response = await api.get(url);
     return response.data.data || [];
   } catch (error) {
     console.error('Error fetching IBOs:', error);

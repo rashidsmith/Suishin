@@ -28,6 +28,8 @@ export interface LoginRequest {
 export interface CreateIBORequest {
   title: string;
   description: string;
+  persona_id?: string;
+  topic: string;
 }
 
 export interface CreateSessionRequest {
