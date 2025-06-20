@@ -181,15 +181,20 @@ export default function SessionBuilder() {
     // Create a new session to enable step navigation
     try {
       const newSession = await createSession({
+        user_id: '00000000-0000-0000-0000-000000000001',
+        learning_objective_id: '00000000-0000-0000-0000-000000000001',
         title: 'New Session',
-        persona_id: '',
-        topic: '',
+        persona_id: '87af2480-74f7-4c6a-a527-ebf21c4af589', // Use existing persona ID
+        topic: 'To be defined',
         modality: 'virtual',
-        business_goals: '',
-        current_step: 'persona'
+        business_goals: 'To be defined'
       });
-      setSessionId(newSession.id);
-      setEditingSession(newSession);
+      if (newSession && newSession.id) {
+        setSessionId(newSession.id);
+        setEditingSession(newSession);
+      } else {
+        console.error('Session creation returned invalid data:', newSession);
+      }
     } catch (error) {
       console.error('Error creating session:', error);
     }

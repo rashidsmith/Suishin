@@ -102,10 +102,10 @@ export const createSession = async (req: Request, res: Response) => {
   try {
     const { user_id, learning_objective_id, title, persona_id, topic, modality, business_goals, card_ids } = req.body;
 
-    if (!user_id || !learning_objective_id || !title || !persona_id || !topic || !modality || !business_goals) {
+    if (!user_id || !learning_objective_id || !title || !modality) {
       return res.status(400).json({
         error: 'Missing required fields',
-        message: 'user_id, learning_objective_id, title, persona_id, topic, modality, and business_goals are required',
+        message: 'user_id, learning_objective_id, title, and modality are required',
         status: 'error'
       });
     }
@@ -126,20 +126,13 @@ export const createSession = async (req: Request, res: Response) => {
         user_id,
         learning_objective_id,
         title,
-        persona_id,
-        topic,
+        persona_id: persona_id || 'temp-placeholder',
+        topic: topic || '',
         modality,
-        business_goals,
+        business_goals: business_goals || '',
         status: 'not_started'
       })
-      .select(`
-        *,
-        personas!inner(
-          id,
-          name,
-          description
-        )
-      `)
+      .select('*')
       .single();
 
     if (sessionError) {
