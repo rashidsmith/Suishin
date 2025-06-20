@@ -142,7 +142,7 @@ export const GenerateIBOsStep = ({ sessionId, onStepComplete }: GenerateIBOsStep
                     Refine with AI
                   </Button>
                   <Button onClick={() => onStepComplete('generate-ibos')}>
-                    Continue to Activities
+                    Continue to Modality Selection
                   </Button>
                 </div>
               </div>

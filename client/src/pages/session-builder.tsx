@@ -28,7 +28,7 @@ interface SessionFormData {
   cardIds: string[];
 }
 
-type BuilderStep = 'persona' | 'topic-goals' | 'modality' | 'ai-generation' | 'cards' | 'review';
+type BuilderStep = 'persona' | 'topic' | 'generate-ibos' | 'choose-modality' | 'build-4c' | 'review';
 
 export default function SessionBuilder() {
   const { cards, loading: cardsLoading, error: cardsError, loadCards } = useCardStore();
@@ -52,12 +52,12 @@ export default function SessionBuilder() {
   const { toast } = useToast();
   
   const [view, setView] = useState<'list' | 'create' | 'edit'>('list');
-  const [currentStep, setCurrentStep] = useState<BuilderStep>('persona');
   const [editingSession, setEditingSession] = useState<any>(null);
   const [sessionId, setSessionId] = useState<string | null>(null);
   
-  // New step navigation system
+  // Step navigation system
   const stepNavigation = useSessionSteps(sessionId);
+  const currentStep = stepNavigation.session?.current_step || 'persona';
 
   const [formData, setFormData] = useState<SessionFormData>({
     title: '',
@@ -463,10 +463,10 @@ export default function SessionBuilder() {
 
           {/* Step Content */}
           {currentStep === 'persona' && renderPersonaStep()}
-          {currentStep === 'topic-goals' && renderTopicGoalsStep()}
-          {currentStep === 'modality' && renderModalityStep()}
-          {currentStep === 'ai-generation' && renderAIGenerationStep()}
-          {currentStep === 'cards' && renderCardsStep()}
+          {currentStep === 'topic' && renderTopicGoalsStep()}
+          {currentStep === 'generate-ibos' && renderAIGenerationStep()}
+          {currentStep === 'choose-modality' && renderModalityStep()}
+          {currentStep === 'build-4c' && renderCardsStep()}
           {currentStep === 'review' && renderReviewStep()}
 
           {/* Navigation */}

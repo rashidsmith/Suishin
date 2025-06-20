@@ -22,13 +22,7 @@ export const SESSION_STEPS: SessionStep[] = [
     id: 'generate-ibos', 
     title: 'Generate IBOs', 
     icon: '🤖',
-    validates: (session) => false // Will implement in next prompt
-  },
-  { 
-    id: 'refine-ibos', 
-    title: 'Refine IBOs', 
-    icon: '✏️',
-    validates: (session) => false // Will implement later
+    validates: (session) => false // Will be validated by AI content state
   },
   { 
     id: 'choose-modality', 
@@ -37,10 +31,16 @@ export const SESSION_STEPS: SessionStep[] = [
     validates: (session) => !!session?.modality 
   },
   { 
-    id: 'build-activities', 
-    title: 'Build Activities', 
+    id: 'build-4c', 
+    title: 'Build 4C Map', 
     icon: '📚',
     validates: (session) => false // Will implement later
+  },
+  { 
+    id: 'review', 
+    title: 'Review & Create', 
+    icon: '✅',
+    validates: (session) => false // Final step
   }
 ];
 
