@@ -84,6 +84,11 @@ export const sessions = pgTable("sessions", {
   current_step: text("current_step").default("persona"),
   completed_steps: jsonb("completed_steps").default([]),
   generation_params: jsonb("generation_params"),
+  // AI-generated content persistence
+  draft_ai_ibos: text("draft_ai_ibos"),           // Stores AI-generated IBO content
+  draft_ai_activities: text("draft_ai_activities"), // Stores 4C activity content
+  ibo_locked: boolean("ibo_locked").default(false), // Whether IBOs are locked
+  locked_ibo_ids: jsonb("locked_ibo_ids"),        // Array of created IBO entity IDs
   started_at: timestamp("started_at"),
   completed_at: timestamp("completed_at"),
   created_at: timestamp("created_at").defaultNow().notNull(),

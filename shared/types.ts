@@ -117,6 +117,11 @@ export interface Session {
     ai_provider: 'openai' | 'anthropic';
     last_prompt?: string;
   };
+  // AI-generated content persistence
+  draft_ai_ibos?: string;     // Stores AI-generated IBO content
+  draft_ai_activities?: string; // Stores 4C activity content
+  ibo_locked?: boolean;       // Whether IBOs are locked
+  locked_ibo_ids?: string[];  // Array of created IBO entity IDs
   started_at?: string;
   completed_at?: string;
   created_at: string;
