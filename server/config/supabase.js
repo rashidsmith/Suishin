@@ -23,16 +23,19 @@ export const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey, {
 // Test database connection
 export const testDatabaseConnection = async () => {
   try {
+    // Test with a simple query that should work with service role
     const { data, error } = await supabaseAdmin
       .from('users')
-      .select('count')
+      .select('id')
       .limit(1);
     
     if (error) {
       console.error('Database connection test failed:', error.message);
+      console.error('Error details:', error);
       return { success: false, error: error.message };
     }
     
+    console.log('Database connection test successful');
     return { success: true, message: 'Database connection successful' };
   } catch (error) {
     console.error('Database connection test error:', error.message);
