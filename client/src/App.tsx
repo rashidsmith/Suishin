@@ -6,6 +6,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import Home from "@/pages/home";
 import Dashboard from "@/pages/dashboard";
 import SupabaseTest from "@/pages/supabase-test";
+import TypesTest from "@/pages/types-test";
 import NotFound from "@/pages/not-found";
 
 function App() {
@@ -17,6 +18,7 @@ function App() {
             <Route path="/" element={<Home />} />
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/supabase-test" element={<SupabaseTest />} />
+            <Route path="/types-test" element={<TypesTest />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </Router>
