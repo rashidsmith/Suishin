@@ -802,7 +802,7 @@ export default function SessionBuilder() {
     return (
       <GenerateIBOsStep 
         sessionId={editingSession?.id || null}
-        onStepComplete={stepHook.updateStep}
+        onStepComplete={stepNavigation.updateStep}
       />
     );
   }
