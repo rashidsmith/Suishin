@@ -5,6 +5,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import Home from "@/pages/home";
 import Dashboard from "@/pages/dashboard";
+import SupabaseTest from "@/pages/supabase-test";
 import NotFound from "@/pages/not-found";
 
 function App() {
@@ -15,6 +16,7 @@ function App() {
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/supabase-test" element={<SupabaseTest />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </Router>
