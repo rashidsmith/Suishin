@@ -4,9 +4,9 @@
 export interface User {
   id: string;
   email: string;
-  name?: string;
-  created_at: string;
-  updated_at: string;
+  name?: string | null;
+  created_at: string | Date;
+  updated_at: string | Date;
 }
 
 export interface IBO {

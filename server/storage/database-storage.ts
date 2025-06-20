@@ -1,6 +1,7 @@
 import { supabaseAdmin } from '../config/supabase.js';
 import { IStorage } from '../storage';
-import { User, InsertUser } from '../../shared/schema';
+import { User as SchemaUser, InsertUser } from '../../shared/schema';
+import { User } from '../../shared/types';
 
 export class DatabaseStorage implements IStorage {
   async getUser(id: number): Promise<User | undefined> {
@@ -47,15 +48,25 @@ export class DatabaseStorage implements IStorage {
     }
   }
 
-  async createUser(insertUser: InsertUser): Promise<User> {
+  async createUser(insertUser: InsertUser | { username: string; password: string }): Promise<User> {
     try {
-      // Map the insertUser to match our User interface
-      const userData = {
-        email: insertUser.username, // Map username to email
-        name: insertUser.username, // Use username as name for now
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      };
+      // Handle both new InsertUser format and legacy format
+      let userData;
+      if ('username' in insertUser) {
+        // Legacy format - map username to email
+        userData = {
+          email: insertUser.username,
+          name: insertUser.username,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        };
+      } else {
+        // New format
+        userData = {
+          email: insertUser.email,
+          name: insertUser.name || null
+        };
+      }
 
       const { data, error } = await supabaseAdmin
         .from('users')

@@ -1,4 +1,5 @@
-import { users, type User, type InsertUser } from "@shared/schema";
+import { users, type InsertUser } from "@shared/schema";
+import { User } from "../shared/types";
 
 // modify the interface with any CRUD methods
 // you might need
@@ -6,7 +7,7 @@ import { users, type User, type InsertUser } from "@shared/schema";
 export interface IStorage {
   getUser(id: number): Promise<User | undefined>;
   getUserByUsername(username: string): Promise<User | undefined>;
-  createUser(user: InsertUser): Promise<User>;
+  createUser(user: InsertUser | { username: string; password: string }): Promise<User>;
   getAllUsers(): Promise<User[]>;
   deleteUser(id: string): Promise<boolean>;
 }
