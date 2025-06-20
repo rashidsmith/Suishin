@@ -269,6 +269,81 @@ Please refine the IBOs according to the request while maintaining the structured
       }
     };
   }
+
+  async generate4CActivities(iboContent, persona, modality, topic, businessGoals) {
+    const provider = this.defaultProvider;
+    
+    if (!this.clients[provider]) {
+      return { success: false, error: `${provider} client not available` };
+    }
+
+    try {
+      console.log(`[AI Service] Generating 4C activities with provider: ${provider}`);
+      
+      const modalityGuidance = {
+        onsite: "Design activities for in-person delivery with face-to-face interaction, group work, and hands-on materials.",
+        virtual: "Create activities optimized for online delivery with digital tools, breakout rooms, and interactive elements.",
+        hybrid: "Develop activities that work both in-person and virtually, with flexible implementation options."
+      };
+
+      const prompt = `You are an expert learning designer specializing in the 4C framework (Connection, Concept, Concrete Practice, Conclusion). 
+
+Create engaging learning activities based on these requirements:
+
+**Target Persona:** ${persona}
+**Topic:** ${topic}
+**Business Goals:** ${businessGoals}
+**Delivery Modality:** ${modality}
+**Modality Guidance:** ${modalityGuidance[modality] || modalityGuidance.virtual}
+
+**Learning Objectives (from IBOs):**
+${iboContent}
+
+Please create a comprehensive 4C learning experience with the following structure:
+
+## 1. CONNECTION (10-15 minutes)
+- Activities to connect learners to the topic and each other
+- Icebreakers, relevance questions, or scenario setting
+- ${modality === 'virtual' ? 'Use polls, chat, or breakout rooms' : modality === 'onsite' ? 'Include physical movement or partner discussions' : 'Provide both virtual and in-person options'}
+
+## 2. CONCEPT (20-30 minutes)
+- Core knowledge and concept delivery
+- Key principles, frameworks, or information
+- ${modality === 'virtual' ? 'Interactive presentations with engagement features' : modality === 'onsite' ? 'Visual aids, demonstrations, or group exploration' : 'Multi-modal content delivery'}
+
+## 3. CONCRETE PRACTICE (30-45 minutes)
+- Hands-on application of learning
+- Skill-building exercises, case studies, or simulations
+- ${modality === 'virtual' ? 'Collaborative documents, virtual simulations, or peer feedback' : modality === 'onsite' ? 'Role-plays, physical exercises, or group projects' : 'Flexible practice activities'}
+
+## 4. CONCLUSION (10-15 minutes)
+- Reflection, summary, and next steps
+- Action planning and commitment
+- ${modality === 'virtual' ? 'Digital reflection tools or commitment sharing' : modality === 'onsite' ? 'Group sharing or written commitments' : 'Multiple reflection options'}
+
+For each section, provide:
+- Clear objectives
+- Detailed activity instructions
+- Time allocations
+- Materials needed
+- Facilitation tips specific to ${modality} delivery
+
+Focus on activities that directly support the learning objectives and business goals for ${persona}.`;
+
+      const result = await this.callAI(prompt, provider);
+      
+      if (result.success) {
+        console.log(`[AI Service] 4C generation successful, content length: ${result.content.length}`);
+        return { success: true, content: result.content };
+      } else {
+        console.error('[AI Service] 4C generation failed:', result.error);
+        return { success: false, error: result.error };
+      }
+    } catch (error) {
+      console.error('[AI Service] 4C generation error:', error);
+      return { success: false, error: error.message };
+    }
+  }
 }
 
 export default new AIService();

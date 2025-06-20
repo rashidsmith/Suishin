@@ -1,0 +1,94 @@
+Create 4C Generation Step
+Create the final step that generates 4C activities based on locked IBOs + chosen modality.
+
+Create Build4CStep component:
+
+javascript// /client/src/components/Build4CStep.jsx
+const Build4CStep = ({ sessionId, onNext }) => {
+  const [generatedActivities, setGeneratedActivities] = useState(null);
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [error, setError] = useState(null);
+  
+  const generate4CActivities = async () => {
+    setIsGenerating(true);
+    setError(null);
+    
+    try {
+      const response = await api.generate4CActivities(sessionId);
+      setGeneratedActivities(response.data.content);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+  
+  if (!generatedActivities) {
+    return (
+      <div className="space-y-6">
+        <div>
+          <h2 className="text-2xl font-bold mb-2">Build 4C Learning Activities</h2>
+          <p className="text-gray-600">
+            AI will create Connection, Concept, Concrete Practice, and Conclusion activities 
+            optimized for your chosen delivery method.
+          </p>
+        </div>
+        
+        <button
+          onClick={generate4CActivities}
+          disabled={isGenerating}
+          className="bg-green-600 text-white px-6 py-3 rounded text-lg"
+        >
+          {isGenerating ? 'Generating Activities...' : 'Generate 4C Activities'}
+        </button>
+        
+        {error && (
+          <div className="text-red-600 p-3 bg-red-50 rounded">
+            Error: {error}
+          </div>
+        )}
+      </div>
+    );
+  }
+  
+  return (
+    <div className="space-y-6">
+      <h2 className="text-2xl font-bold">Generated 4C Activities</h2>
+      
+      <div className="bg-gray-50 p-4 rounded">
+        <pre className="whitespace-pre-wrap">{generatedActivities}</pre>
+      </div>
+      
+      <div className="flex space-x-3">
+        <button onClick={generate4CActivities}>Regenerate</button>
+        <button onClick={onNext} className="bg-blue-600 text-white px-6 py-2 rounded">
+          Continue to Review →
+        </button>
+      </div>
+    </div>
+  );
+};
+
+Add 4C generation API endpoint:
+
+javascript// /server/routes/sessionRoutes.js
+router.post('/sessions/:id/generate-4c', async (req, res) => {
+  try {
+    const session = await getSessionWithDetails(req.params.id);
+    
+    const result = await aiService.generate4CActivities(
+      session.aiGeneratedIbos, // or however you store the locked IBOs
+      session.persona,
+      session.modality
+    );
+    
+    if (result.success) {
+      res.json({ success: true, content: result.content });
+    } else {
+      res.status(400).json({ success: false, error: result.error });
+    }
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+Test: Full flow works: Persona → Topic → IBOs → Modality → 4C → Review

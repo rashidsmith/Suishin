@@ -173,4 +173,60 @@ router.post('/:id/refine-ibos', async (req, res) => {
   }
 });
 
+// Generate 4C activities endpoint
+router.post('/sessions/:id/generate-4c', async (req: Request, res: Response) => {
+  try {
+    const sessionId = req.params.id;
+    const { iboContent } = req.body;
+
+    if (!iboContent) {
+      return res.status(400).json({ 
+        success: false, 
+        error: 'IBO content is required. Please generate IBOs first.' 
+      });
+    }
+
+    // Get session with persona details
+    const sessionQuery = `
+      SELECT s.*, p.name as persona_name, p.description as persona_description,
+             p.context as persona_context, p.experience as persona_experience,
+             p.motivations as persona_motivations, p.constraints as persona_constraints
+      FROM sessions s
+      LEFT JOIN personas p ON s.persona_id = p.id
+      WHERE s.id = $1
+    `;
+    
+    const sessionResult = await db.execute(sql.raw(sessionQuery, [sessionId]));
+    
+    if (sessionResult.length === 0) {
+      return res.status(404).json({ success: false, error: 'Session not found' });
+    }
+
+    const session = sessionResult[0];
+
+    const personaDescription = `${session.persona_name}: ${session.persona_description}. Context: ${session.persona_context}. Experience: ${session.persona_experience}. Motivations: ${session.persona_motivations}. Constraints: ${session.persona_constraints}`;
+
+    console.log('[API] Generating 4C activities for session:', sessionId);
+    
+    const result = await aiService.generate4CActivities(
+      iboContent,
+      personaDescription,
+      session.modality,
+      session.topic,
+      session.business_goals
+    );
+    
+    if (result.success) {
+      console.log('[API] 4C generation successful');
+      res.json({ success: true, content: result.content });
+    } else {
+      console.error('[API] 4C generation failed:', result.error);
+      res.status(400).json({ success: false, error: result.error });
+    }
+  } catch (error: any) {
+    console.error('[API] 4C generation error:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
 export default router;
