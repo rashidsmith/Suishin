@@ -135,23 +135,69 @@ class AIService {
         throw new Error('OpenAI client not initialized');
       }
       
-      // Basic implementation - expand in next prompt
-      throw new Error('OpenAI service implementation not yet complete');
+      const response = await this.openaiClient.chat.completions.create({
+        model: 'gpt-4o',
+        messages: [{ role: 'user', content: prompt }],
+        max_tokens: 2000,
+        temperature: 0.7
+      });
+
+      return response.choices[0]?.message?.content || 'No response generated';
     }
 
     if (selectedProvider === 'anthropic') {
-      if (!this.anthropicKey || this.anthropicKey !== 'your_key_here') {
+      if (!this.anthropicKey || this.anthropicKey === 'your_key_here') {
         throw new Error('Anthropic API key not configured');
       }
       if (!this.anthropicClient) {
         throw new Error('Anthropic client not initialized');
       }
       
-      // Basic implementation - expand in next prompt
-      throw new Error('Anthropic service implementation not yet complete');
+      const response = await this.anthropicClient.messages.create({
+        model: 'claude-3-sonnet-20240229',
+        max_tokens: 2000,
+        messages: [{ role: 'user', content: prompt }]
+      });
+
+      return response.content[0]?.text || 'No response generated';
     }
 
     throw new Error(`Unknown AI provider: ${selectedProvider}`);
+  }
+
+  async generateIBOs(generationParams) {
+    const { personaContext, topic, businessGoals, aiProvider } = generationParams;
+    
+    const prompt = `You are an expert learning designer. Create complete Business Objectives with full hierarchy:
+
+PERSONA: ${personaContext}
+TOPIC: ${topic}  
+BUSINESS GOALS: ${businessGoals}
+
+Generate 3-4 Business Objectives, each with:
+1. Business Objective Title
+2. WIIFM (What's In It For Me)
+3. Performance Metrics (2-3 per BO)
+   - Observable Behaviors (2-3 per PM)
+     - Learning Objectives (1-2 per OB)
+
+Format as structured markdown with clear hierarchy.`;
+
+    try {
+      const response = await this.callAI(prompt, aiProvider);
+      return {
+        success: true,
+        content: response,
+        generationParams,
+        timestamp: new Date().toISOString()
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: error.message,
+        generationParams
+      };
+    }
   }
 
   getAvailableProviders() {
