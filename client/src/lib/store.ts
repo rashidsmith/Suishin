@@ -55,9 +55,9 @@ interface IBOState {
 
 interface IBOStore extends IBOState {
   loadIBOs: () => Promise<void>;
-  createIBO: (title: string, description?: string) => Promise<void>;
+  createIBO: (iboData: { title: string; description: string; persona_id?: string; topic: string }) => Promise<any>;
   selectIBO: (ibo: IBO | null) => void;
-  updateIBO: (id: string, data: Partial<{ title: string; description: string }>) => Promise<void>;
+  updateIBO: (id: string, data: Partial<{ title: string; description: string; persona_id?: string; topic: string }>) => Promise<any>;
   deleteIBO: (id: string) => Promise<void>;
   clearError: () => void;
 }
@@ -81,20 +81,22 @@ export const useIBOStore = create<IBOStore>((set, get) => ({
     }
   },
 
-  createIBO: async (title: string, description?: string) => {
+  createIBO: async (iboData: { title: string; description: string; persona_id?: string; topic: string }) => {
     set({ loading: true, error: null });
     try {
-      const newIBO = await createIBOAPI({ title, description: description || '' });
+      const newIBO = await createIBOAPI(iboData);
       const currentIBOs = get().ibos;
       set({ 
         ibos: [...currentIBOs, newIBO],
         loading: false 
       });
+      return newIBO;
     } catch (error) {
       set({ 
         error: error instanceof Error ? error.message : 'Failed to create IBO',
         loading: false 
       });
+      throw error;
     }
   },
 
@@ -102,7 +104,7 @@ export const useIBOStore = create<IBOStore>((set, get) => ({
     set({ selectedIBO: ibo });
   },
 
-  updateIBO: async (id: string, data: Partial<{ title: string; description: string }>) => {
+  updateIBO: async (id: string, data: Partial<{ title: string; description: string; persona_id?: string; topic: string }>) => {
     set({ loading: true, error: null });
     try {
       const updatedIBO = await updateIBOAPI(id, data);
@@ -115,11 +117,13 @@ export const useIBOStore = create<IBOStore>((set, get) => ({
         selectedIBO: get().selectedIBO?.id === id ? updatedIBO : get().selectedIBO,
         loading: false 
       });
+      return updatedIBO;
     } catch (error) {
       set({ 
         error: error instanceof Error ? error.message : 'Failed to update IBO',
         loading: false 
       });
+      throw error;
     }
   },
 

@@ -191,7 +191,7 @@ export default function IBOBuilder() {
   };
 
   const handleSave = async () => {
-    if (!formData.title.trim()) return;
+    if (!formData.title.trim() || !formData.topic.trim()) return;
     
     setFormLoading(true);
     try {
@@ -473,9 +473,25 @@ export default function IBOBuilder() {
                   {ibo.description && (
                     <p className="text-sm text-gray-600 mt-2">{ibo.description}</p>
                   )}
-                  <p className="text-xs text-gray-400 mt-3">
-                    Created: {new Date(ibo.created_at).toLocaleDateString()}
-                  </p>
+                  <div className="mt-3 space-y-1">
+                    {ibo.topic && (
+                      <p className="text-xs text-blue-600 font-medium">
+                        Topic: {ibo.topic}
+                      </p>
+                    )}
+                    {ibo.persona_id ? (
+                      <p className="text-xs text-green-600 font-medium">
+                        Persona: {personas.find(p => p.id === ibo.persona_id)?.name || 'Unknown'}
+                      </p>
+                    ) : (
+                      <p className="text-xs text-gray-500 font-medium">
+                        Generic (Reusable)
+                      </p>
+                    )}
+                    <p className="text-xs text-gray-400">
+                      Created: {new Date(ibo.created_at).toLocaleDateString()}
+                    </p>
+                  </div>
                 </CardHeader>
                 <CardContent className="pt-0">
                   <div className="flex gap-2">
@@ -577,6 +593,32 @@ export default function IBOBuilder() {
                 placeholder="Enter IBO description"
                 className="mt-1"
                 rows={3}
+              />
+            </div>
+            <div>
+              <Label htmlFor="persona">Target Persona</Label>
+              <Select value={formData.persona_id} onValueChange={(value) => setFormData(prev => ({ ...prev, persona_id: value === 'generic' ? '' : value }))}>
+                <SelectTrigger className="mt-1">
+                  <SelectValue placeholder="Select persona or keep generic" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="generic">Generic (Reusable)</SelectItem>
+                  {personas.map(persona => (
+                    <SelectItem key={persona.id} value={persona.id}>
+                      {persona.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label htmlFor="topic">Topic*</Label>
+              <Input
+                id="topic"
+                value={formData.topic}
+                onChange={(e) => setFormData(prev => ({ ...prev, topic: e.target.value }))}
+                placeholder="Enter subject matter focus"
+                className="mt-1"
               />
             </div>
           </CardContent>
