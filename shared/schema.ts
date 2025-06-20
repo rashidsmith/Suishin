@@ -68,7 +68,39 @@ export const insertActivitySchema = createInsertSchema(activities).pick({
   order_index: true,
 });
 
+// Sessions table
+export const sessions = pgTable("sessions", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  user_id: uuid("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  learning_objective_id: text("learning_objective_id").notNull(),
+  title: text("title").notNull(),
+  status: text("status").notNull().default("not_started"), // 'not_started' | 'in_progress' | 'completed' | 'paused'
+  persona_id: uuid("persona_id").notNull(),
+  topic: text("topic").notNull(),
+  modality: text("modality").notNull(), // 'onsite' | 'virtual' | 'hybrid'
+  business_goals: text("business_goals").notNull(),
+  started_at: timestamp("started_at"),
+  completed_at: timestamp("completed_at"),
+  created_at: timestamp("created_at").defaultNow().notNull(),
+  updated_at: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const insertSessionSchema = createInsertSchema(sessions).pick({
+  user_id: true,
+  learning_objective_id: true,
+  title: true,
+  status: true,
+  persona_id: true,
+  topic: true,
+  modality: true,
+  business_goals: true,
+  started_at: true,
+  completed_at: true,
+});
+
 export type InsertCard = z.infer<typeof insertCardSchema>;
 export type Card = typeof cards.$inferSelect;
 export type InsertActivity = z.infer<typeof insertActivitySchema>;
 export type Activity = typeof activities.$inferSelect;
+export type InsertSession = z.infer<typeof insertSessionSchema>;
+export type Session = typeof sessions.$inferSelect;

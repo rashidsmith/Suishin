@@ -97,6 +97,10 @@ export interface Session {
   learning_objective_id: string;
   title: string;
   status: 'not_started' | 'in_progress' | 'completed' | 'paused';
+  persona_id: string;         // Required - who is this for
+  topic: string;              // Required - what subject
+  modality: 'onsite' | 'virtual' | 'hybrid';  // Required - how delivered
+  business_goals: string;     // Session-specific outcomes
   started_at?: string;
   completed_at?: string;
   created_at: string;
