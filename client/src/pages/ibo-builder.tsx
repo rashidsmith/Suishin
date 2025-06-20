@@ -100,6 +100,38 @@ export default function IBOBuilder() {
     }
   };
 
+  // Function to load Performance Metrics and Observable Behaviors from database
+  const loadPerformanceMetricsFromDatabase = async (iboId: string) => {
+    try {
+      const metrics = await fetchPerformanceMetricsByIBO(iboId);
+      const loadedMetrics: PerformanceMetric[] = [];
+
+      for (const metric of metrics) {
+        const behaviors = await fetchObservableBehaviorsByPM(metric.id);
+        const observableBehaviors: ObservableBehavior[] = behaviors.map((behavior: any) => ({
+          id: behavior.id,
+          description: behavior.text,
+          proficiencyLevel: 1,
+          learningObjectives: []
+        }));
+
+        loadedMetrics.push({
+          id: metric.id,
+          title: metric.text,
+          description: '',
+          observableBehaviors
+        });
+      }
+
+      setFormData(prev => ({
+        ...prev,
+        performanceMetrics: loadedMetrics
+      }));
+    } catch (error) {
+      console.error('Error loading performance metrics:', error);
+    }
+  };
+
   const resetForm = () => {
     setFormData({
       title: '',
@@ -116,7 +148,7 @@ export default function IBOBuilder() {
     setView('create');
   };
 
-  const handleEdit = (ibo: any) => {
+  const handleEdit = async (ibo: any) => {
     setEditingIBO(ibo);
     setFormData({
       title: ibo.title || '',
@@ -125,6 +157,14 @@ export default function IBOBuilder() {
       description: ibo.description || '',
       performanceMetrics: []
     });
+    
+    // Load existing Performance Metrics and Observable Behaviors
+    try {
+      await loadPerformanceMetricsFromDatabase(ibo.id);
+    } catch (error) {
+      console.error('Error loading performance metrics:', error);
+    }
+    
     setView('edit');
   };
 
