@@ -188,6 +188,39 @@ export const updateSessionCard = async (sessionId: string, cardId: string, updat
   return response.data.data;
 };
 
+// AI Content API functions for session builder
+export const getSession = async (sessionId: string) => {
+  const response = await api.get(`/sessions/${sessionId}`);
+  return response.data.data;
+};
+
+export const generateIBOs = async (sessionId: string) => {
+  const response = await api.post(`/sessions/${sessionId}/generate-ibos`);
+  return response.data;
+};
+
+export const refineIBOs = async (sessionId: string, data: {
+  currentContent: string;
+  refinementRequest: string;
+}) => {
+  const response = await api.post(`/sessions/${sessionId}/refine-ibos`, data);
+  return response.data;
+};
+
+export const saveDraftIBOs = async (sessionId: string, content: string) => {
+  const response = await api.put(`/sessions/${sessionId}`, {
+    draft_ai_ibos: content
+  });
+  return response.data;
+};
+
+export const saveDraftActivities = async (sessionId: string, content: string) => {
+  const response = await api.put(`/sessions/${sessionId}`, {
+    draft_ai_activities: content
+  });
+  return response.data;
+};
+
 // Performance Metrics API functions
 export const fetchPerformanceMetricsByIBO = async (iboId: string) => {
   try {
