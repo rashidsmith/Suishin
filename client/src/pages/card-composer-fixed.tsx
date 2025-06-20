@@ -80,9 +80,9 @@ export default function CardComposer() {
 
   // Mock learning objectives - in real app, these would come from API
   const learningObjectives = [
-    { id: '11111111-1111-1111-1111-111111111111', title: 'Understand basic concepts', iboId: formData.iboId },
-    { id: '22222222-2222-2222-2222-222222222222', title: 'Apply knowledge practically', iboId: formData.iboId },
-    { id: '33333333-3333-3333-3333-333333333333', title: 'Analyze complex scenarios', iboId: formData.iboId }
+    { id: 'lo1', title: 'Understand basic concepts', iboId: formData.iboId },
+    { id: 'lo2', title: 'Apply knowledge practically', iboId: formData.iboId },
+    { id: 'lo3', title: 'Analyze complex scenarios', iboId: formData.iboId }
   ];
 
   const resetForm = () => {
