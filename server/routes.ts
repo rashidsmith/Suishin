@@ -10,6 +10,7 @@ import sessionRoutes from "./routes/sessionRoutes";
 import performanceMetricRoutes from "./routes/performanceMetricRoutes";
 import observableBehaviorRoutes from "./routes/observableBehaviorRoutes";
 import personaRoutes from "./routes/personaRoutes";
+import aiRoutes from "./routes/aiRoutes";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // put application routes here
@@ -41,6 +42,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Add Persona routes
   app.use("/api/personas", personaRoutes);
+
+  // Add AI routes
+  app.use("/api/ai", aiRoutes);
 
   // use storage to perform CRUD operations on the storage interface
   // e.g. storage.insertUser(user) or storage.getUserByUsername(username)
