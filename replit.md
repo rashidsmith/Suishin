@@ -122,6 +122,8 @@ Changelog:
 - June 20, 2025. Persona entity implementation completed - added foundational design entity with database table, full CRUD API endpoints, Zustand store, comprehensive management page with create/edit/delete functionality, and navigation integration
 - June 20, 2025. Sessions updated to persona + topic + modality driven structure - replaced old session fields with persona_id, topic, modality, and business_goals, updated database schema with proper indexes, enhanced API with filtering support, and modified Session Builder UI for new structure
 - June 20, 2025. Comprehensive navigation system implemented - added "System" dropdown menu with links to all system pages (Dashboard, Sessions) and testing interfaces (Supabase Test, Types Test, IBO Test) with descriptions, available on both desktop and mobile navigation
+- June 20, 2025. AI-powered session generation implemented - added OpenAI integration to Session Builder with persona-aware content generation for IBOs and 4C activities, including step-by-step workflow with persona → topic/goals → modality → AI generation → cards → review
+- June 20, 2025. Modality-aware activity suggestions completed - enhanced Card schema with recommended_modalities and modality_notes fields, updated Session Builder to filter cards by modality compatibility, improved AI generation to provide modality-specific recommendations for onsite/virtual/hybrid delivery
 
 ## User Preferences
 

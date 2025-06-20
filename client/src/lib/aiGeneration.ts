@@ -96,7 +96,11 @@ Respond in JSON format with this structure:
       "type": "connection|concept|concrete_practice|conclusion",
       "estimated_duration": 15,
       "materials": ["List of materials needed"],
-      "considerations": ["Special considerations for this persona and modality"]
+      "considerations": ["Special considerations for this persona and modality"],
+      "recommended_modalities": ["${modality}"],
+      "modality_notes": {
+        "${modality}": "Specific adaptation notes for ${modality} delivery"
+      }
     }
   ],
   "rationale": "Explanation of how this structure addresses the persona's needs"
