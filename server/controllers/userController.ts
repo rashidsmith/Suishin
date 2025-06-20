@@ -4,9 +4,9 @@ import { User, ApiResponse, CreateUserPayload } from '../types';
 
 export const getUsers = async (req: Request, res: Response) => {
   try {
-    // Since we're using memory storage, we'll just return a sample response
+    const users = await storage.getAllUsers();
     const response: ApiResponse<User[]> = { 
-      data: [], 
+      data: users, 
       message: 'Users retrieved successfully' 
     };
     res.json(response);
@@ -31,7 +31,21 @@ export const createUser = async (req: Request, res: Response) => {
       return res.status(400).json(errorResponse);
     }
 
-    const newUser: User = await storage.createUser({ username: email, password: 'temp' });
+    // Check if user already exists
+    const existingUser = await storage.getUserByUsername(email);
+    if (existingUser) {
+      const errorResponse: ApiResponse<never> = { 
+        error: 'User already exists', 
+        message: 'A user with this email already exists' 
+      };
+      return res.status(409).json(errorResponse);
+    }
+
+    // Create user with proper mapping for database storage
+    const newUser: User = await storage.createUser({ 
+      username: email,
+      password: 'temp' // This will be ignored by DatabaseStorage
+    });
     
     const response: ApiResponse<User> = { 
       data: newUser, 
@@ -39,6 +53,7 @@ export const createUser = async (req: Request, res: Response) => {
     };
     res.status(201).json(response);
   } catch (error) {
+    console.error('Create user error:', error);
     const errorResponse: ApiResponse<never> = { 
       error: 'Failed to create user', 
       message: error instanceof Error ? error.message : 'Unknown error' 
