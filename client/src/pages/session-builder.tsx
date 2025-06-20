@@ -11,6 +11,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Plus, BookOpen, Trash2, Users, Target, Settings, CreditCard, Check, ArrowLeft, ArrowRight, Save, Loader2, Wand2, Brain, Lightbulb } from "lucide-react";
 import { GenerateIBOsStep } from '../components/GenerateIBOsStep';
+import { ModalitySelectionStep } from '../components/ModalitySelectionStep';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Progress } from "@/components/ui/progress";
@@ -421,7 +422,12 @@ export default function SessionBuilder() {
           {currentStep === 'persona' && renderPersonaStep()}
           {currentStep === 'topic' && renderTopicGoalsStep()}
           {currentStep === 'generate-ibos' && renderAIGenerationStep()}
-          {currentStep === 'choose-modality' && renderModalityStep()}
+          {currentStep === 'choose-modality' && (
+            <ModalitySelectionStep 
+              sessionId={sessionId}
+              onStepComplete={stepNavigation.updateStep}
+            />
+          )}
           {currentStep === 'build-4c' && renderCardsStep()}
           {currentStep === 'review' && renderReviewStep()}
 
