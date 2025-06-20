@@ -1,7 +1,11 @@
 import { create } from 'zustand';
 import { AppState, User } from '../types';
-import { IBO } from '../../../shared/types';
-import { fetchIBOs, createIBO as createIBOAPI, updateIBO as updateIBOAPI, deleteIBO as deleteIBOAPI, fetchCards, createCard as createCardAPI, updateCard as updateCardAPI, deleteCard as deleteCardAPI } from './api';
+import { IBO, Session } from '../../../shared/types';
+import { 
+  fetchIBOs, createIBO as createIBOAPI, updateIBO as updateIBOAPI, deleteIBO as deleteIBOAPI, 
+  fetchCards, createCard as createCardAPI, updateCard as updateCardAPI, deleteCard as deleteCardAPI,
+  fetchSessions, createSession as createSessionAPI, updateSession as updateSessionAPI, deleteSession as deleteSessionAPI 
+} from './api';
 
 interface CardData {
   id: string;
