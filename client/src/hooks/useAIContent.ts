@@ -78,16 +78,8 @@ export const useAIContent = (sessionId: string | null) => {
         isGenerating: false
       }));
 
-      // Persist to database
-      await fetch(`/api/sessions/${sessionId}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          draft_ai_ibos: data.content
-        })
-      });
+      // Auto-save to database as draft
+      await saveDraftIBOs(sessionId, data.content);
       
       return { success: true };
     } catch (error) {
@@ -134,16 +126,8 @@ export const useAIContent = (sessionId: string | null) => {
         isGenerating: false
       }));
 
-      // Persist refined content to database
-      await fetch(`/api/sessions/${sessionId}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          draft_ai_ibos: data.content
-        })
-      });
+      // Auto-save refined content to database
+      await saveDraftIBOs(sessionId, data.content);
       
       return { success: true };
     } catch (error) {
@@ -160,18 +144,10 @@ export const useAIContent = (sessionId: string | null) => {
   const updateRefinedIBOs = async (content: string) => {
     setAIContent(prev => ({ ...prev, refinedIBOs: content }));
     
-    // Persist manual edits to database
+    // Auto-save manual edits to database
     if (sessionId) {
       try {
-        await fetch(`/api/sessions/${sessionId}`, {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
-            draft_ai_ibos: content
-          })
-        });
+        await saveDraftIBOs(sessionId, content);
       } catch (error) {
         console.error('Failed to persist manual IBO edits:', error);
       }
@@ -181,18 +157,10 @@ export const useAIContent = (sessionId: string | null) => {
   const saveActivities = async (content: string) => {
     setAIContent(prev => ({ ...prev, generatedActivities: content }));
     
-    // Persist 4C activities to database
+    // Auto-save 4C activities to database
     if (sessionId) {
       try {
-        await fetch(`/api/sessions/${sessionId}`, {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
-            draft_ai_activities: content
-          })
-        });
+        await saveDraft4C(sessionId, content);
       } catch (error) {
         console.error('Failed to persist 4C activities:', error);
       }
