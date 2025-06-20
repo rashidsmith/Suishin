@@ -14,6 +14,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Progress } from "@/components/ui/progress";
 import { generateSessionContent, type AIGenerationRequest, type AIGenerationResponse } from "../lib/aiGeneration";
+import { StepProgressBar } from '../components/StepProgressBar';
+import { useSessionSteps } from '../hooks/useSessionSteps';
+import { SESSION_STEPS } from '../../../shared/sessionSteps';
 
 interface SessionFormData {
   title: string;
