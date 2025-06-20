@@ -11,10 +11,12 @@ interface Build4CStepProps {
 }
 
 export const Build4CStep = ({ sessionId, onStepComplete }: Build4CStepProps) => {
-  const { aiContent } = useAIContent(sessionId);
-  const [generated4C, setGenerated4C] = useState<string | null>(null);
+  const { aiContent, saveActivities } = useAIContent(sessionId);
   const [isGenerating, setIsGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Use persisted activities if available, otherwise local state
+  const generated4C = aiContent.generatedActivities;
 
   const generate4CActivities = async () => {
     if (!sessionId) return;
@@ -36,7 +38,8 @@ export const Build4CStep = ({ sessionId, onStepComplete }: Build4CStepProps) => 
       const data = await response.json();
       
       if (data.success) {
-        setGenerated4C(data.content);
+        // Persist 4C activities to database via useAIContent hook
+        await saveActivities(data.content);
       } else {
         setError(data.error || 'Failed to generate 4C activities');
       }
