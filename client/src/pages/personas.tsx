@@ -109,94 +109,9 @@ export default function PersonasPage() {
     }
   };
 
-  const PersonaForm = () => (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <div className="grid grid-cols-1 gap-4">
-        <div>
-          <Label htmlFor="name">Name</Label>
-          <Input
-            id="name"
-            value={formData.name}
-            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-            placeholder="e.g., New Managers, Senior Engineers"
-            required
-          />
-        </div>
-        
-        <div>
-          <Label htmlFor="description">Description</Label>
-          <Textarea
-            id="description"
-            value={formData.description}
-            onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-            placeholder="Detailed context about this group"
-            required
-          />
-        </div>
-        
-        <div>
-          <Label htmlFor="context">Context</Label>
-          <Textarea
-            id="context"
-            value={formData.context}
-            onChange={(e) => setFormData({ ...formData, context: e.target.value })}
-            placeholder="Their work environment, challenges"
-            required
-          />
-        </div>
-        
-        <div>
-          <Label htmlFor="experience">Experience</Label>
-          <Textarea
-            id="experience"
-            value={formData.experience}
-            onChange={(e) => setFormData({ ...formData, experience: e.target.value })}
-            placeholder="What they know coming in"
-            required
-          />
-        </div>
-        
-        <div>
-          <Label htmlFor="motivations">Motivations</Label>
-          <Textarea
-            id="motivations"
-            value={formData.motivations}
-            onChange={(e) => setFormData({ ...formData, motivations: e.target.value })}
-            placeholder="What drives them, pain points"
-            required
-          />
-        </div>
-        
-        <div>
-          <Label htmlFor="constraints">Constraints</Label>
-          <Textarea
-            id="constraints"
-            value={formData.constraints}
-            onChange={(e) => setFormData({ ...formData, constraints: e.target.value })}
-            placeholder="Time, attention, learning preferences"
-            required
-          />
-        </div>
-      </div>
-      
-      <div className="flex justify-end space-x-2">
-        <Button
-          type="button"
-          variant="outline"
-          onClick={() => {
-            resetForm();
-            setIsCreateOpen(false);
-            setEditingPersona(null);
-          }}
-        >
-          Cancel
-        </Button>
-        <Button type="submit" disabled={loading}>
-          {editingPersona ? 'Update' : 'Create'} Persona
-        </Button>
-      </div>
-    </form>
-  );
+  const handleInputChange = (field: string, value: string) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+  };
 
   return (
     <div className="container mx-auto p-6">
@@ -225,7 +140,91 @@ export default function PersonasPage() {
                 Define a learner persona that will guide your content creation
               </DialogDescription>
             </DialogHeader>
-            <PersonaForm />
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div className="grid grid-cols-1 gap-4">
+                <div>
+                  <Label htmlFor="create-name">Name</Label>
+                  <Input
+                    id="create-name"
+                    value={formData.name}
+                    onChange={(e) => handleInputChange('name', e.target.value)}
+                    placeholder="e.g., New Managers, Senior Engineers"
+                    required
+                  />
+                </div>
+                
+                <div>
+                  <Label htmlFor="create-description">Description</Label>
+                  <Textarea
+                    id="create-description"
+                    value={formData.description}
+                    onChange={(e) => handleInputChange('description', e.target.value)}
+                    placeholder="Detailed context about this group"
+                    required
+                  />
+                </div>
+                
+                <div>
+                  <Label htmlFor="create-context">Context</Label>
+                  <Textarea
+                    id="create-context"
+                    value={formData.context}
+                    onChange={(e) => handleInputChange('context', e.target.value)}
+                    placeholder="Their work environment, challenges"
+                    required
+                  />
+                </div>
+                
+                <div>
+                  <Label htmlFor="create-experience">Experience</Label>
+                  <Textarea
+                    id="create-experience"
+                    value={formData.experience}
+                    onChange={(e) => handleInputChange('experience', e.target.value)}
+                    placeholder="What they know coming in"
+                    required
+                  />
+                </div>
+                
+                <div>
+                  <Label htmlFor="create-motivations">Motivations</Label>
+                  <Textarea
+                    id="create-motivations"
+                    value={formData.motivations}
+                    onChange={(e) => handleInputChange('motivations', e.target.value)}
+                    placeholder="What drives them, pain points"
+                    required
+                  />
+                </div>
+                
+                <div>
+                  <Label htmlFor="create-constraints">Constraints</Label>
+                  <Textarea
+                    id="create-constraints"
+                    value={formData.constraints}
+                    onChange={(e) => handleInputChange('constraints', e.target.value)}
+                    placeholder="Time, attention, learning preferences"
+                    required
+                  />
+                </div>
+              </div>
+              
+              <div className="flex justify-end space-x-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => {
+                    resetForm();
+                    setIsCreateOpen(false);
+                  }}
+                >
+                  Cancel
+                </Button>
+                <Button type="submit" disabled={loading}>
+                  Create Persona
+                </Button>
+              </div>
+            </form>
           </DialogContent>
         </Dialog>
       </div>
@@ -308,7 +307,91 @@ export default function PersonasPage() {
               Update the persona details
             </DialogDescription>
           </DialogHeader>
-          <PersonaForm />
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="grid grid-cols-1 gap-4">
+              <div>
+                <Label htmlFor="edit-name">Name</Label>
+                <Input
+                  id="edit-name"
+                  value={formData.name}
+                  onChange={(e) => handleInputChange('name', e.target.value)}
+                  placeholder="e.g., New Managers, Senior Engineers"
+                  required
+                />
+              </div>
+              
+              <div>
+                <Label htmlFor="edit-description">Description</Label>
+                <Textarea
+                  id="edit-description"
+                  value={formData.description}
+                  onChange={(e) => handleInputChange('description', e.target.value)}
+                  placeholder="Detailed context about this group"
+                  required
+                />
+              </div>
+              
+              <div>
+                <Label htmlFor="edit-context">Context</Label>
+                <Textarea
+                  id="edit-context"
+                  value={formData.context}
+                  onChange={(e) => handleInputChange('context', e.target.value)}
+                  placeholder="Their work environment, challenges"
+                  required
+                />
+              </div>
+              
+              <div>
+                <Label htmlFor="edit-experience">Experience</Label>
+                <Textarea
+                  id="edit-experience"
+                  value={formData.experience}
+                  onChange={(e) => handleInputChange('experience', e.target.value)}
+                  placeholder="What they know coming in"
+                  required
+                />
+              </div>
+              
+              <div>
+                <Label htmlFor="edit-motivations">Motivations</Label>
+                <Textarea
+                  id="edit-motivations"
+                  value={formData.motivations}
+                  onChange={(e) => handleInputChange('motivations', e.target.value)}
+                  placeholder="What drives them, pain points"
+                  required
+                />
+              </div>
+              
+              <div>
+                <Label htmlFor="edit-constraints">Constraints</Label>
+                <Textarea
+                  id="edit-constraints"
+                  value={formData.constraints}
+                  onChange={(e) => handleInputChange('constraints', e.target.value)}
+                  placeholder="Time, attention, learning preferences"
+                  required
+                />
+              </div>
+            </div>
+            
+            <div className="flex justify-end space-x-2">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => {
+                  resetForm();
+                  setEditingPersona(null);
+                }}
+              >
+                Cancel
+              </Button>
+              <Button type="submit" disabled={loading}>
+                Update Persona
+              </Button>
+            </div>
+          </form>
         </DialogContent>
       </Dialog>
     </div>
