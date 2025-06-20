@@ -62,15 +62,21 @@ Generate a comprehensive learning session structure with:
 
 2. 4C Activity structure optimized for ${modality} delivery:
    - Connection: How to engage this persona in ${modality} format (5-10 minutes)
-   - Concept: How to teach new information effectively in ${modality} (15-25 minutes)
+   - Concept: How to teach new information effectively in ${modality} (15-25 minutes)  
    - Concrete Practice: Hands-on activities that work for ${modality} (20-30 minutes)
    - Conclusion: Reflection/commitment activities for ${modality} (5-10 minutes)
 
 For each activity, consider:
 - The persona's constraints and learning preferences
-- The limitations and opportunities of ${modality} delivery
-- Practical materials or tools needed
-- Engagement strategies specific to this persona
+- ${modality}-specific limitations and opportunities:
+  ${modality === 'virtual' ? 
+    '• Virtual: Screen sharing, breakout rooms, digital tools, engagement challenges, time zone differences' :
+    modality === 'onsite' ? 
+    '• Onsite: Physical materials, face-to-face interaction, venue requirements, group dynamics' :
+    '• Hybrid: Blended experience design, technology integration, dual preparation needs'}
+- Practical materials or tools needed for ${modality}
+- Engagement strategies that leverage ${modality} strengths
+- Adaptations needed to overcome ${modality} constraints
 
 Provide a brief rationale explaining how this structure addresses the persona's specific needs and constraints.
 

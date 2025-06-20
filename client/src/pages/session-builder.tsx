@@ -683,11 +683,26 @@ export default function SessionBuilder() {
     );
   }
 
-  // Step 4: 4C Structure (Cards)
+  // Step 5: 4C Structure (Cards)
   function renderCardsStep() {
-    const availableCards = cards.filter(card => 
-      !formData.cardIds.includes(card.id)
-    );
+    const availableCards = cards.filter(card => {
+      // Filter out already selected cards
+      if (formData.cardIds.includes(card.id)) return false;
+      
+      // Filter by modality compatibility if card has modality preferences
+      if (card.recommended_modalities && card.recommended_modalities.length > 0) {
+        try {
+          const modalities = typeof card.recommended_modalities === 'string' 
+            ? JSON.parse(card.recommended_modalities)
+            : card.recommended_modalities;
+          return modalities.includes(formData.modality);
+        } catch (e) {
+          return true; // Include if parsing fails
+        }
+      }
+      
+      return true; // Include cards without modality restrictions
+    });
 
     return (
       <Card>
@@ -703,13 +718,39 @@ export default function SessionBuilder() {
             <div>
               <h4 className="font-medium mb-2">Available Cards</h4>
               <div className="space-y-2 max-h-64 overflow-y-auto">
-                {availableCards.map(card => (
-                  <div key={card.id} className="p-2 border rounded cursor-pointer hover:bg-gray-50"
-                       onClick={() => setFormData(prev => ({ ...prev, cardIds: [...prev.cardIds, card.id] }))}>
-                    <div className="font-medium">{card.title}</div>
-                    <div className="text-sm text-gray-600">{card.content}</div>
-                  </div>
-                ))}
+                {availableCards.map(card => {
+                  let modalityTags = [];
+                  try {
+                    modalityTags = card.recommended_modalities 
+                      ? (typeof card.recommended_modalities === 'string' 
+                          ? JSON.parse(card.recommended_modalities) 
+                          : card.recommended_modalities)
+                      : [];
+                  } catch (e) {
+                    modalityTags = [];
+                  }
+                  
+                  return (
+                    <div key={card.id} className="p-2 border rounded cursor-pointer hover:bg-gray-50"
+                         onClick={() => setFormData(prev => ({ ...prev, cardIds: [...prev.cardIds, card.id] }))}>
+                      <div className="font-medium">{card.title}</div>
+                      <div className="text-sm text-gray-600">{card.description || card.content}</div>
+                      {modalityTags.length > 0 && (
+                        <div className="flex gap-1 mt-1">
+                          {modalityTags.map((modality: string) => (
+                            <span key={modality} className={`text-xs px-2 py-1 rounded ${
+                              modality === formData.modality 
+                                ? 'bg-green-100 text-green-700' 
+                                : 'bg-gray-100 text-gray-600'
+                            }`}>
+                              {modality}
+                            </span>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
             </div>
             

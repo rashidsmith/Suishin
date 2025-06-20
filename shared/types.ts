@@ -62,9 +62,10 @@ export interface LearningObjective {
 
 export interface Card {
   id: string;
-  activity_block_id: string;
+  activity_block_id?: string;
   title: string;
-  content: string;
+  content?: string;
+  description?: string;
   order_index: number;
   card_type: string;
   metadata?: Record<string, any>;

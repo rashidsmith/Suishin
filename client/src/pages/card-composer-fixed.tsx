@@ -64,7 +64,9 @@ export default function CardComposer() {
     iboId: '',
     learningObjectiveId: '',
     targetDuration: 30,
-    activities: []
+    activities: [],
+    recommendedModalities: ['virtual'],
+    modalityNotes: {}
   });
 
   // Activity form state
