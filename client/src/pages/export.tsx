@@ -6,7 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Loader2, Download, FileText, Database, AlertTriangle } from "lucide-react";
 import { useIBOStore, useCardStore } from '../lib/store';
-import { generateJSON, generateCSV, downloadFile, validateExportData } from '../lib/exportUtils';
+import { generateJSON, generateCSV, downloadFile, validateExportData, getExportFilename } from '../lib/exportUtils';
 
 export default function Export() {
   const { ibos, loading: ibosLoading, loadIBOs } = useIBOStore();

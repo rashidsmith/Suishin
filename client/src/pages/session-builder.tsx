@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Loader2, Plus, Trash2, Edit, Clock, Save, BookOpen } from "lucide-react";
+import { Loader2, Plus, Trash2, Edit, Clock, Save, BookOpen, AlertCircle } from "lucide-react";
 import { useCardStore, useIBOStore } from '../lib/store';
 import { useSessionStore } from '../lib/sessionStore';
 import { useToast } from '@/hooks/use-toast';
@@ -18,8 +18,8 @@ interface SessionFormData {
 }
 
 export default function SessionBuilder() {
-  const { cards, loading: cardsLoading, loadCards } = useCardStore();
-  const { ibos, loadIBOs } = useIBOStore();
+  const { cards, loading: cardsLoading, error: cardsError, loadCards } = useCardStore();
+  const { ibos, loading: ibosLoading, error: ibosError, loadIBOs } = useIBOStore();
   const { 
     sessions, 
     loading: sessionsLoading, 
@@ -43,23 +43,72 @@ export default function SessionBuilder() {
   });
 
   const [saving, setSaving] = useState(false);
+  const [formErrors, setFormErrors] = useState<{[key: string]: string}>({});
 
   useEffect(() => {
-    loadCards();
-    loadIBOs();
-    loadSessions();
+    const loadData = async () => {
+      try {
+        await Promise.all([loadCards(), loadIBOs(), loadSessions()]);
+      } catch (error) {
+        toast({
+          title: "Error Loading Data",
+          description: "Failed to load application data. Please refresh the page.",
+          variant: "destructive",
+        });
+      }
+    };
+    loadData();
   }, [loadCards, loadIBOs, loadSessions]);
 
   useEffect(() => {
     if (sessionsError) {
       toast({
-        title: "Error",
+        title: "Session Error",
         description: sessionsError,
         variant: "destructive",
       });
       clearError();
     }
   }, [sessionsError, toast, clearError]);
+
+  useEffect(() => {
+    if (cardsError) {
+      toast({
+        title: "Cards Error",
+        description: cardsError,
+        variant: "destructive",
+      });
+    }
+  }, [cardsError, toast]);
+
+  useEffect(() => {
+    if (ibosError) {
+      toast({
+        title: "IBOs Error",
+        description: ibosError,
+        variant: "destructive",
+      });
+    }
+  }, [ibosError, toast]);
+
+  const validateForm = (): boolean => {
+    const errors: {[key: string]: string} = {};
+    
+    if (!formData.title.trim()) {
+      errors.title = 'Session title is required';
+    }
+    
+    if (formData.title.length > 100) {
+      errors.title = 'Title must be less than 100 characters';
+    }
+    
+    if (formData.description.length > 500) {
+      errors.description = 'Description must be less than 500 characters';
+    }
+
+    setFormErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
 
   const resetForm = () => {
     setFormData({
@@ -68,6 +117,7 @@ export default function SessionBuilder() {
       cardIds: []
     });
     setEditingSession(null);
+    setFormErrors({});
   };
 
   const handleCreateNew = () => {
@@ -86,10 +136,14 @@ export default function SessionBuilder() {
   };
 
   const handleSaveSession = async () => {
-    if (!formData.title.trim()) {
+    if (!validateForm()) {
+      return;
+    }
+
+    if (ibos.length === 0) {
       toast({
-        title: "Error",
-        description: "Session title is required",
+        title: "No IBOs Available",
+        description: "Please create an IBO first before creating sessions.",
         variant: "destructive",
       });
       return;
@@ -105,24 +159,27 @@ export default function SessionBuilder() {
           description: formData.description,
           card_ids: formData.cardIds
         });
+        toast({
+          title: "Session Created",
+          description: "Your learning session has been created successfully.",
+        });
       } else if (editingSession) {
         await updateSession(editingSession.id, {
           title: formData.title,
           description: formData.description,
           card_ids: formData.cardIds
         });
+        toast({
+          title: "Session Updated",
+          description: "Your session has been updated successfully.",
+        });
       }
-
-      toast({
-        title: "Success",
-        description: view === 'create' ? "Session created successfully" : "Session updated successfully",
-      });
 
       resetForm();
       setView('list');
     } catch (error) {
       toast({
-        title: "Error",
+        title: "Error Saving Session",
         description: error instanceof Error ? error.message : "Failed to save session",
         variant: "destructive",
       });
@@ -132,15 +189,19 @@ export default function SessionBuilder() {
   };
 
   const handleDeleteSession = async (sessionId: string) => {
+    if (!confirm('Are you sure you want to delete this session? This action cannot be undone.')) {
+      return;
+    }
+
     try {
       await deleteSession(sessionId);
       toast({
-        title: "Success",
-        description: "Session deleted successfully",
+        title: "Session Deleted",
+        description: "The session has been deleted successfully.",
       });
     } catch (error) {
       toast({
-        title: "Error",
+        title: "Error Deleting Session",
         description: error instanceof Error ? error.message : "Failed to delete session",
         variant: "destructive",
       });
@@ -170,11 +231,23 @@ export default function SessionBuilder() {
     }, 0);
   };
 
-  if (cardsLoading || sessionsLoading) {
+  if (cardsLoading || sessionsLoading || ibosLoading) {
     return (
       <div className="flex items-center justify-center h-64">
         <Loader2 className="h-8 w-8 animate-spin" />
+        <span className="ml-2">Loading session data...</span>
       </div>
+    );
+  }
+
+  if (cardsError || sessionsError || ibosError) {
+    return (
+      <Alert variant="destructive" className="max-w-md mx-auto mt-8">
+        <AlertCircle className="h-4 w-4" />
+        <AlertDescription>
+          Failed to load session data. Please refresh the page and try again.
+        </AlertDescription>
+      </Alert>
     );
   }
 
@@ -270,9 +343,18 @@ export default function SessionBuilder() {
                 <Input
                   id="title"
                   value={formData.title}
-                  onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
+                  onChange={(e) => {
+                    setFormData(prev => ({ ...prev, title: e.target.value }));
+                    if (formErrors.title) {
+                      setFormErrors(prev => ({ ...prev, title: '' }));
+                    }
+                  }}
                   placeholder="Enter session title"
+                  className={formErrors.title ? 'border-red-500' : ''}
                 />
+                {formErrors.title && (
+                  <p className="text-red-500 text-sm mt-1">{formErrors.title}</p>
+                )}
               </div>
 
               <div>
@@ -280,10 +362,19 @@ export default function SessionBuilder() {
                 <Textarea
                   id="description"
                   value={formData.description}
-                  onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+                  onChange={(e) => {
+                    setFormData(prev => ({ ...prev, description: e.target.value }));
+                    if (formErrors.description) {
+                      setFormErrors(prev => ({ ...prev, description: '' }));
+                    }
+                  }}
                   placeholder="Enter session description"
                   rows={3}
+                  className={formErrors.description ? 'border-red-500' : ''}
                 />
+                {formErrors.description && (
+                  <p className="text-red-500 text-sm mt-1">{formErrors.description}</p>
+                )}
               </div>
 
               <div className="flex justify-between items-center">
