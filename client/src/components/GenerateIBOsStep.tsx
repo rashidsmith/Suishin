@@ -4,6 +4,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAIContent } from "@/hooks/useAIContent";
+import { FormattedIBODisplay } from "./FormattedIBODisplay";
 import { Loader2, RefreshCw, CheckCircle, Edit3, Target, BookOpen, Briefcase, Lightbulb } from "lucide-react";
 import { useState } from "react";
 
@@ -111,10 +112,8 @@ export const GenerateIBOsStep = ({ sessionId, onStepComplete }: GenerateIBOsStep
               </div>
             ) : (
               <div className="space-y-4">
-                <div className="bg-gray-50 dark:bg-gray-900 p-4 rounded-lg border">
-                  <pre className="whitespace-pre-wrap text-sm overflow-auto max-h-96">
-                    {aiContent.refinedIBOs}
-                  </pre>
+                <div className="bg-gray-50 dark:bg-gray-900 p-4 rounded-lg border max-h-96 overflow-auto">
+                  <FormattedIBODisplay rawContent={aiContent.refinedIBOs} />
                 </div>
                 <div className="flex gap-2 flex-wrap">
                   <Button
