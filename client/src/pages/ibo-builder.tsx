@@ -8,6 +8,14 @@ import { Textarea } from "@/components/ui/textarea";
 import { Separator } from "@/components/ui/separator";
 import { Loader2, Plus, Trash2, Edit, BookOpen, Save, X, ArrowLeft } from "lucide-react";
 import { useIBOStore } from '../lib/store';
+import { 
+  createPerformanceMetric, 
+  createObservableBehavior,
+  fetchPerformanceMetricsByIBO,
+  fetchObservableBehaviorsByPM,
+  deletePerformanceMetric,
+  deleteObservableBehavior 
+} from '../lib/api';
 
 interface PerformanceMetric {
   id: string;
@@ -60,6 +68,38 @@ export default function IBOBuilder() {
     loadIBOs();
   }, [loadIBOs]);
 
+  // Function to save Performance Metrics and Observable Behaviors to database
+  const savePerformanceMetricsToDatabase = async (iboId: string, performanceMetrics: PerformanceMetric[]) => {
+    try {
+      for (let i = 0; i < performanceMetrics.length; i++) {
+        const metric = performanceMetrics[i];
+        if (metric.title.trim()) {
+          // Create performance metric
+          const savedMetric = await createPerformanceMetric({
+            text: metric.title,
+            ibo_id: iboId,
+            sort_order: i
+          });
+
+          // Create observable behaviors for this metric
+          for (let j = 0; j < metric.observableBehaviors.length; j++) {
+            const behavior = metric.observableBehaviors[j];
+            if (behavior.description.trim()) {
+              await createObservableBehavior({
+                text: behavior.description,
+                pm_id: savedMetric.id,
+                sort_order: j
+              });
+            }
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Error saving performance metrics:', error);
+      throw error;
+    }
+  };
+
   const resetForm = () => {
     setFormData({
       title: '',
@@ -98,14 +138,22 @@ export default function IBOBuilder() {
         description: formData.description
       };
 
+      let savedIBO;
       if (view === 'create') {
-        await createIBO(formData.title, formData.description);
+        savedIBO = await createIBO(formData.title, formData.description);
       } else if (editingIBO) {
-        await updateIBO(editingIBO.id, iboData);
+        savedIBO = await updateIBO(editingIBO.id, iboData);
+      }
+
+      // Save Performance Metrics and Observable Behaviors to database
+      const iboId = savedIBO?.id || editingIBO?.id;
+      if (iboId && formData.performanceMetrics.length > 0) {
+        await savePerformanceMetricsToDatabase(iboId, formData.performanceMetrics);
       }
       
       setView('list');
       resetForm();
+      loadIBOs(); // Refresh the list
     } catch (err) {
       console.error('Failed to save IBO:', err);
     } finally {

@@ -7,6 +7,8 @@ import { setupDatabase } from "./routes/db-setup";
 import iboRoutes from "./routes/iboRoutes";
 import cardRoutes from "./routes/cardRoutes";
 import sessionRoutes from "./routes/sessionRoutes";
+import performanceMetricRoutes from "./routes/performanceMetricRoutes";
+import observableBehaviorRoutes from "./routes/observableBehaviorRoutes";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // put application routes here
@@ -29,6 +31,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Add Session routes
   app.use("/api/sessions", sessionRoutes);
+
+  // Add Performance Metric routes
+  app.use("/api/performance-metrics", performanceMetricRoutes);
+
+  // Add Observable Behavior routes
+  app.use("/api/observable-behaviors", observableBehaviorRoutes);
 
   // use storage to perform CRUD operations on the storage interface
   // e.g. storage.insertUser(user) or storage.getUserByUsername(username)

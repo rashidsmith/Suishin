@@ -156,6 +156,100 @@ export const updateSessionCard = async (sessionId: string, cardId: string, updat
   return response.data.data;
 };
 
+// Performance Metrics API functions
+export const fetchPerformanceMetricsByIBO = async (iboId: string) => {
+  try {
+    const response = await api.get(`/performance-metrics/ibo/${iboId}`);
+    return response.data.data || [];
+  } catch (error) {
+    console.error('Error fetching performance metrics:', error);
+    throw error;
+  }
+};
+
+export const createPerformanceMetric = async (metricData: {
+  text: string;
+  ibo_id: string;
+  sort_order?: number;
+}) => {
+  try {
+    const response = await api.post('/performance-metrics', metricData);
+    return response.data.data;
+  } catch (error) {
+    console.error('Error creating performance metric:', error);
+    throw error;
+  }
+};
+
+export const updatePerformanceMetric = async (id: string, metricData: {
+  text?: string;
+  sort_order?: number;
+}) => {
+  try {
+    const response = await api.put(`/performance-metrics/${id}`, metricData);
+    return response.data.data;
+  } catch (error) {
+    console.error('Error updating performance metric:', error);
+    throw error;
+  }
+};
+
+export const deletePerformanceMetric = async (id: string): Promise<void> => {
+  try {
+    await api.delete(`/performance-metrics/${id}`);
+  } catch (error) {
+    console.error('Error deleting performance metric:', error);
+    throw error;
+  }
+};
+
+// Observable Behaviors API functions
+export const fetchObservableBehaviorsByPM = async (pmId: string) => {
+  try {
+    const response = await api.get(`/observable-behaviors/pm/${pmId}`);
+    return response.data.data || [];
+  } catch (error) {
+    console.error('Error fetching observable behaviors:', error);
+    throw error;
+  }
+};
+
+export const createObservableBehavior = async (behaviorData: {
+  text: string;
+  pm_id: string;
+  sort_order?: number;
+}) => {
+  try {
+    const response = await api.post('/observable-behaviors', behaviorData);
+    return response.data.data;
+  } catch (error) {
+    console.error('Error creating observable behavior:', error);
+    throw error;
+  }
+};
+
+export const updateObservableBehavior = async (id: string, behaviorData: {
+  text?: string;
+  sort_order?: number;
+}) => {
+  try {
+    const response = await api.put(`/observable-behaviors/${id}`, behaviorData);
+    return response.data.data;
+  } catch (error) {
+    console.error('Error updating observable behavior:', error);
+    throw error;
+  }
+};
+
+export const deleteObservableBehavior = async (id: string): Promise<void> => {
+  try {
+    await api.delete(`/observable-behaviors/${id}`);
+  } catch (error) {
+    console.error('Error deleting observable behavior:', error);
+    throw error;
+  }
+};
+
 // Export the configured axios instance for other API calls
 export default api;
 
