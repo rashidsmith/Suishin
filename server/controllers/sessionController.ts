@@ -361,6 +361,65 @@ export const deleteSession = async (req: Request, res: Response) => {
   }
 };
 
+export const updateSessionProgress = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const { current_step, completed_steps, generation_params } = req.body;
+
+    const updateData: any = {
+      updated_at: new Date().toISOString()
+    };
+
+    if (current_step !== undefined) {
+      updateData.current_step = current_step;
+    }
+
+    if (completed_steps !== undefined) {
+      updateData.completed_steps = JSON.stringify(completed_steps);
+    }
+
+    if (generation_params !== undefined) {
+      updateData.generation_params = JSON.stringify(generation_params);
+    }
+
+    const { data: session, error } = await supabaseAdmin
+      .from('sessions')
+      .update(updateData)
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Error updating session progress:', error);
+      return res.status(500).json({
+        error: 'Failed to update session progress',
+        message: error.message,
+        status: 'error'
+      });
+    }
+
+    if (!session) {
+      return res.status(404).json({
+        error: 'Session not found',
+        status: 'error'
+      });
+    }
+
+    res.status(200).json({
+      data: session,
+      message: 'Session progress updated successfully',
+      status: 'ok'
+    });
+  } catch (error) {
+    console.error('Unexpected error updating session progress:', error);
+    res.status(500).json({
+      error: 'Internal server error',
+      message: 'An unexpected error occurred',
+      status: 'error'
+    });
+  }
+};
+
 export const updateSessionCard = async (req: Request, res: Response) => {
   try {
     const { sessionId, cardId } = req.params;

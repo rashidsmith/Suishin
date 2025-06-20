@@ -124,6 +124,7 @@ Changelog:
 - June 20, 2025. Comprehensive navigation system implemented - added "System" dropdown menu with links to all system pages (Dashboard, Sessions) and testing interfaces (Supabase Test, Types Test, IBO Test) with descriptions, available on both desktop and mobile navigation
 - June 20, 2025. AI-powered session generation implemented - added OpenAI integration to Session Builder with persona-aware content generation for IBOs and 4C activities, including step-by-step workflow with persona → topic/goals → modality → AI generation → cards → review
 - June 20, 2025. Modality-aware activity suggestions completed - enhanced Card schema with recommended_modalities and modality_notes fields, updated Session Builder to filter cards by modality compatibility, improved AI generation to provide modality-specific recommendations for onsite/virtual/hybrid delivery
+- June 20, 2025. Minimal database schema update for session progress tracking completed - added current_step, completed_steps, and generation_params fields to sessions table, implemented PUT /api/sessions/:id/progress endpoint for step updates, keeps AI-generated content in React state while storing only essential metadata for session flow tracking
 
 ## User Preferences
 

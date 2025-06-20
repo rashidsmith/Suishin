@@ -5,7 +5,8 @@ import {
   createSession,
   updateSession,
   deleteSession,
-  updateSessionCard
+  updateSessionCard,
+  updateSessionProgress
 } from '../controllers/sessionController.js';
 
 const router = Router();
@@ -16,6 +17,9 @@ router.get('/:id', getSessionById);
 router.post('/', createSession);
 router.put('/:id', updateSession);
 router.delete('/:id', deleteSession);
+
+// Session progress tracking
+router.put('/:id/progress', updateSessionProgress);
 
 // Session card relationship routes
 router.put('/:sessionId/cards/:cardId', updateSessionCard);
