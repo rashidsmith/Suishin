@@ -60,6 +60,55 @@ export const deleteIBO = async (id: string): Promise<void> => {
   }
 };
 
+// Card API functions
+export const fetchCards = async () => {
+  const response = await api.get('/cards');
+  return response.data.data;
+};
+
+export const fetchCardById = async (id: string) => {
+  const response = await api.get(`/cards/${id}`);
+  return response.data.data;
+};
+
+export const createCard = async (cardData: {
+  title: string;
+  description?: string;
+  ibo_id: string;
+  learning_objective_id: string;
+  target_duration: number;
+  activities: Array<{
+    title: string;
+    description?: string;
+    type: 'C1' | 'C2' | 'C3' | 'C4';
+    duration: number;
+  }>;
+}) => {
+  const response = await api.post('/cards', cardData);
+  return response.data.data;
+};
+
+export const updateCard = async (id: string, cardData: {
+  title: string;
+  description?: string;
+  ibo_id: string;
+  learning_objective_id: string;
+  target_duration: number;
+  activities: Array<{
+    title: string;
+    description?: string;
+    type: 'C1' | 'C2' | 'C3' | 'C4';
+    duration: number;
+  }>;
+}) => {
+  const response = await api.put(`/cards/${id}`, cardData);
+  return response.data.data;
+};
+
+export const deleteCard = async (id: string): Promise<void> => {
+  await api.delete(`/cards/${id}`);
+};
+
 // Export the configured axios instance for other API calls
 export default api;
 
