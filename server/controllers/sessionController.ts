@@ -3,10 +3,35 @@ import { supabaseAdmin } from '../config/supabase.js';
 
 export const getAllSessions = async (req: Request, res: Response) => {
   try {
-    const { data: sessions, error } = await supabaseAdmin
+    const { personaId, modality, topic, status } = req.query;
+    
+    let query = supabaseAdmin
       .from('sessions')
-      .select('*')
+      .select(`
+        *,
+        personas!inner(
+          id,
+          name,
+          description
+        )
+      `)
       .order('created_at', { ascending: false });
+
+    // Apply filters if provided
+    if (personaId && personaId !== 'all') {
+      query = query.eq('persona_id', personaId);
+    }
+    if (modality && modality !== 'all') {
+      query = query.eq('modality', modality);
+    }
+    if (topic) {
+      query = query.ilike('topic', `%${topic}%`);
+    }
+    if (status && status !== 'all') {
+      query = query.eq('status', status);
+    }
+
+    const { data: sessions, error } = await query;
 
     if (error) {
       console.error('Error fetching sessions:', error);
@@ -75,12 +100,21 @@ export const getSessionById = async (req: Request, res: Response) => {
 
 export const createSession = async (req: Request, res: Response) => {
   try {
-    const { user_id, learning_objective_id, title, description, card_ids } = req.body;
+    const { user_id, learning_objective_id, title, persona_id, topic, modality, business_goals, card_ids } = req.body;
 
-    if (!user_id || !learning_objective_id || !title) {
+    if (!user_id || !learning_objective_id || !title || !persona_id || !topic || !modality || !business_goals) {
       return res.status(400).json({
         error: 'Missing required fields',
-        message: 'user_id, learning_objective_id, and title are required',
+        message: 'user_id, learning_objective_id, title, persona_id, topic, modality, and business_goals are required',
+        status: 'error'
+      });
+    }
+
+    // Validate modality
+    if (!['onsite', 'virtual', 'hybrid'].includes(modality)) {
+      return res.status(400).json({
+        error: 'Invalid modality',
+        message: 'modality must be one of: onsite, virtual, hybrid',
         status: 'error'
       });
     }
@@ -92,10 +126,20 @@ export const createSession = async (req: Request, res: Response) => {
         user_id,
         learning_objective_id,
         title,
-        description,
+        persona_id,
+        topic,
+        modality,
+        business_goals,
         status: 'not_started'
       })
-      .select()
+      .select(`
+        *,
+        personas!inner(
+          id,
+          name,
+          description
+        )
+      `)
       .single();
 
     if (sessionError) {
@@ -169,21 +213,43 @@ export const createSession = async (req: Request, res: Response) => {
 export const updateSession = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    const { title, description, status, started_at, completed_at, card_ids } = req.body;
+    const { title, persona_id, topic, modality, business_goals, status, started_at, completed_at, card_ids } = req.body;
+
+    // Validate modality if provided
+    if (modality && !['onsite', 'virtual', 'hybrid'].includes(modality)) {
+      return res.status(400).json({
+        error: 'Invalid modality',
+        message: 'modality must be one of: onsite, virtual, hybrid',
+        status: 'error'
+      });
+    }
 
     // Update the session
+    const updateData: any = {
+      updated_at: new Date().toISOString()
+    };
+    
+    if (title !== undefined) updateData.title = title;
+    if (persona_id !== undefined) updateData.persona_id = persona_id;
+    if (topic !== undefined) updateData.topic = topic;
+    if (modality !== undefined) updateData.modality = modality;
+    if (business_goals !== undefined) updateData.business_goals = business_goals;
+    if (status !== undefined) updateData.status = status;
+    if (started_at !== undefined) updateData.started_at = started_at;
+    if (completed_at !== undefined) updateData.completed_at = completed_at;
+
     const { data: session, error: sessionError } = await supabaseAdmin
       .from('sessions')
-      .update({
-        title,
-        description,
-        status,
-        started_at,
-        completed_at,
-        updated_at: new Date().toISOString()
-      })
+      .update(updateData)
       .eq('id', id)
-      .select()
+      .select(`
+        *,
+        personas!inner(
+          id,
+          name,
+          description
+        )
+      `)
       .single();
 
     if (sessionError) {

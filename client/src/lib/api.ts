@@ -119,8 +119,25 @@ export const deleteCard = async (id: string): Promise<void> => {
 };
 
 // Session API functions
-export const fetchSessions = async () => {
-  const response = await api.get('/sessions');
+export const fetchSessions = async (params?: { 
+  personaId?: string; 
+  modality?: string; 
+  topic?: string; 
+  status?: string; 
+}) => {
+  let url = '/sessions';
+  if (params) {
+    const searchParams = new URLSearchParams();
+    if (params.personaId) searchParams.append('personaId', params.personaId);
+    if (params.modality) searchParams.append('modality', params.modality);
+    if (params.topic) searchParams.append('topic', params.topic);
+    if (params.status) searchParams.append('status', params.status);
+    
+    const queryString = searchParams.toString();
+    if (queryString) url += `?${queryString}`;
+  }
+  
+  const response = await api.get(url);
   return response.data.data;
 };
 
@@ -133,7 +150,10 @@ export const createSession = async (sessionData: {
   user_id: string;
   learning_objective_id: string;
   title: string;
-  description?: string;
+  persona_id: string;
+  topic: string;
+  modality: 'onsite' | 'virtual' | 'hybrid';
+  business_goals: string;
   card_ids?: string[];
 }) => {
   const response = await api.post('/sessions', sessionData);
@@ -142,7 +162,10 @@ export const createSession = async (sessionData: {
 
 export const updateSession = async (id: string, sessionData: {
   title?: string;
-  description?: string;
+  persona_id?: string;
+  topic?: string;
+  modality?: 'onsite' | 'virtual' | 'hybrid';
+  business_goals?: string;
   status?: 'not_started' | 'in_progress' | 'completed' | 'paused';
   started_at?: string;
   completed_at?: string;

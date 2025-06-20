@@ -8,18 +8,29 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Loader2, Plus, Trash2, Edit, Clock, Save, BookOpen, AlertCircle } from "lucide-react";
 import { useCardStore, useIBOStore } from '../lib/store';
 import { useSessionStore } from '../lib/sessionStore';
+import { usePersonaStore } from '../lib/personaStore';
 import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 interface SessionFormData {
   title: string;
-  description: string;
+  persona_id: string;
+  topic: string;
+  modality: 'onsite' | 'virtual' | 'hybrid';
+  business_goals: string;
   cardIds: string[];
 }
 
 export default function SessionBuilder() {
   const { cards, loading: cardsLoading, error: cardsError, loadCards } = useCardStore();
   const { ibos, loading: ibosLoading, error: ibosError, loadIBOs } = useIBOStore();
+  const { 
+    personas, 
+    loading: personasLoading, 
+    error: personasError, 
+    loadPersonas 
+  } = usePersonaStore();
   const { 
     sessions, 
     loading: sessionsLoading, 
@@ -38,7 +49,10 @@ export default function SessionBuilder() {
   // Form state
   const [formData, setFormData] = useState<SessionFormData>({
     title: '',
-    description: '',
+    persona_id: '',
+    topic: '',
+    modality: 'virtual',
+    business_goals: '',
     cardIds: []
   });
 
@@ -48,6 +62,7 @@ export default function SessionBuilder() {
   useEffect(() => {
     const loadData = async () => {
       try {
+        await loadPersonas();
         await Promise.all([loadCards(), loadIBOs(), loadSessions()]);
       } catch (error) {
         toast({
