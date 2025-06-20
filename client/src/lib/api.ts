@@ -250,6 +250,70 @@ export const deleteObservableBehavior = async (id: string): Promise<void> => {
   }
 };
 
+// Persona API functions
+export const fetchPersonas = async () => {
+  try {
+    const response = await api.get('/personas');
+    return response.data.data;
+  } catch (error) {
+    console.error('Error fetching personas:', error);
+    throw error;
+  }
+};
+
+export const fetchPersonaById = async (id: string) => {
+  try {
+    const response = await api.get(`/personas/${id}`);
+    return response.data.data;
+  } catch (error) {
+    console.error('Error fetching persona:', error);
+    throw error;
+  }
+};
+
+export const createPersona = async (personaData: {
+  name: string;
+  description: string;
+  context: string;
+  experience: string;
+  motivations: string;
+  constraints: string;
+}) => {
+  try {
+    const response = await api.post('/personas', personaData);
+    return response.data.data;
+  } catch (error) {
+    console.error('Error creating persona:', error);
+    throw error;
+  }
+};
+
+export const updatePersona = async (id: string, personaData: {
+  name?: string;
+  description?: string;
+  context?: string;
+  experience?: string;
+  motivations?: string;
+  constraints?: string;
+}) => {
+  try {
+    const response = await api.put(`/personas/${id}`, personaData);
+    return response.data.data;
+  } catch (error) {
+    console.error('Error updating persona:', error);
+    throw error;
+  }
+};
+
+export const deletePersona = async (id: string): Promise<void> => {
+  try {
+    await api.delete(`/personas/${id}`);
+  } catch (error) {
+    console.error('Error deleting persona:', error);
+    throw error;
+  }
+};
+
 // Export the configured axios instance for other API calls
 export default api;
 
