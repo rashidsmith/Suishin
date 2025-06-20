@@ -1,42 +1,48 @@
 import { Request, Response } from 'express';
 import { storage } from '../storage';
+import { User, ApiResponse, CreateUserPayload } from '../types';
 
 export const getUsers = async (req: Request, res: Response) => {
   try {
     // Since we're using memory storage, we'll just return a sample response
-    res.json({ 
+    const response: ApiResponse<User[]> = { 
       data: [], 
       message: 'Users retrieved successfully' 
-    });
+    };
+    res.json(response);
   } catch (error) {
-    res.status(500).json({ 
+    const errorResponse: ApiResponse<never> = { 
       error: 'Failed to get users', 
       message: error instanceof Error ? error.message : 'Unknown error' 
-    });
+    };
+    res.status(500).json(errorResponse);
   }
 };
 
 export const createUser = async (req: Request, res: Response) => {
   try {
-    const { username, email } = req.body;
+    const { email, name }: CreateUserPayload = req.body;
     
-    if (!username || !email) {
-      return res.status(400).json({ 
+    if (!email) {
+      const errorResponse: ApiResponse<never> = { 
         error: 'Missing required fields', 
-        message: 'Username and email are required' 
-      });
+        message: 'Email is required' 
+      };
+      return res.status(400).json(errorResponse);
     }
 
-    const newUser = await storage.createUser({ username, password: 'temp' });
+    const newUser: User = await storage.createUser({ username: email, password: 'temp' });
     
-    res.status(201).json({ 
+    const response: ApiResponse<User> = { 
       data: newUser, 
       message: 'User created successfully' 
-    });
+    };
+    res.status(201).json(response);
   } catch (error) {
-    res.status(500).json({ 
+    const errorResponse: ApiResponse<never> = { 
       error: 'Failed to create user', 
       message: error instanceof Error ? error.message : 'Unknown error' 
-    });
+    };
+    res.status(500).json(errorResponse);
   }
 };
