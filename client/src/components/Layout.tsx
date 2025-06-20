@@ -9,9 +9,23 @@ import {
   Download,
   Users,
   Menu,
-  X
+  X,
+  Settings,
+  ChevronDown,
+  TestTube,
+  Database,
+  Code2,
+  BarChart3
 } from "lucide-react";
 import { useState } from 'react';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -28,6 +42,17 @@ export default function Layout({ children }: LayoutProps) {
     { name: 'Card Composer', href: '/cards', icon: CreditCard },
     { name: 'Session Builder', href: '/session-builder', icon: PlayCircle },
     { name: 'Export', href: '/export', icon: Download },
+  ];
+
+  const systemPages = [
+    { name: 'Dashboard', href: '/dashboard', icon: BarChart3, description: 'Analytics and overview' },
+    { name: 'Sessions', href: '/sessions', icon: PlayCircle, description: 'Session management' },
+  ];
+
+  const testingPages = [
+    { name: 'Supabase Test', href: '/supabase-test', icon: Database, description: 'Database connection test' },
+    { name: 'Types Test', href: '/types-test', icon: Code2, description: 'TypeScript interfaces test' },
+    { name: 'IBO Test', href: '/ibo-test', icon: TestTube, description: 'IBO API testing' },
   ];
 
   const isActive = (path: string) => {
@@ -75,6 +100,53 @@ export default function Layout({ children }: LayoutProps) {
                   );
                 })}
               </div>
+            </div>
+
+            {/* Additional Navigation Dropdown */}
+            <div className="hidden sm:flex sm:items-center">
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" className="flex items-center gap-2 text-gray-600 hover:text-gray-900">
+                    <Settings className="w-4 h-4" />
+                    System
+                    <ChevronDown className="w-3 h-3" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-56">
+                  <DropdownMenuLabel>System Pages</DropdownMenuLabel>
+                  {systemPages.map((page) => {
+                    const Icon = page.icon;
+                    return (
+                      <DropdownMenuItem key={page.name} asChild>
+                        <Link to={page.href} className="flex items-center gap-2 w-full">
+                          <Icon className="w-4 h-4" />
+                          <div className="flex flex-col">
+                            <span className="font-medium">{page.name}</span>
+                            <span className="text-xs text-muted-foreground">{page.description}</span>
+                          </div>
+                        </Link>
+                      </DropdownMenuItem>
+                    );
+                  })}
+                  
+                  <DropdownMenuSeparator />
+                  <DropdownMenuLabel>Testing & Debug</DropdownMenuLabel>
+                  {testingPages.map((page) => {
+                    const Icon = page.icon;
+                    return (
+                      <DropdownMenuItem key={page.name} asChild>
+                        <Link to={page.href} className="flex items-center gap-2 w-full">
+                          <Icon className="w-4 h-4" />
+                          <div className="flex flex-col">
+                            <span className="font-medium">{page.name}</span>
+                            <span className="text-xs text-muted-foreground">{page.description}</span>
+                          </div>
+                        </Link>
+                      </DropdownMenuItem>
+                    );
+                  })}
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
 
             {/* Mobile menu button */}
