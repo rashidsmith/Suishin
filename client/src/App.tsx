@@ -7,6 +7,7 @@ import Home from "@/pages/home";
 import Dashboard from "@/pages/dashboard";
 import SupabaseTest from "@/pages/supabase-test";
 import TypesTest from "@/pages/types-test";
+import IBOTest from "@/pages/ibo-test";
 import NotFound from "@/pages/not-found";
 
 function App() {
@@ -19,6 +20,7 @@ function App() {
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/supabase-test" element={<SupabaseTest />} />
             <Route path="/types-test" element={<TypesTest />} />
+            <Route path="/ibo-test" element={<IBOTest />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </Router>
