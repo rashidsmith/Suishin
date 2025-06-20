@@ -8,9 +8,10 @@ import {
   updateSessionCard,
   updateSessionProgress
 } from '../controllers/sessionController.js';
-import { supabaseAdmin as supabase } from '../config/supabase.js';
 // @ts-ignore
 import aiService from '../services/aiService.js';
+// @ts-ignore
+import { supabaseAdmin } from '../config/supabase.js';
 
 const router = Router();
 
@@ -231,112 +232,6 @@ router.post('/sessions/:id/generate-4c', async (req, res) => {
   } catch (error) {
     console.error('[API] 4C generation error:', error);
     res.status(500).json({ success: false, error: error.message });
-  }
-});
-
-// Save draft IBOs endpoint
-router.put('/:id/draft-ibos', async (req, res) => {
-  try {
-    const { id: sessionId } = req.params;
-    const { content } = req.body;
-
-    const { data, error } = await supabase
-      .from('sessions')
-      .update({ draft_ai_ibos: content })
-      .eq('id', sessionId)
-      .select()
-      .single();
-
-    if (error) {
-      console.error('[API] Error saving draft IBOs:', error);
-      return res.status(400).json({ success: false, error: error.message });
-    }
-
-    res.json({ success: true, data });
-  } catch (error) {
-    console.error('[API] Draft IBOs save error:', error);
-    res.status(500).json({ success: false, error: (error as Error).message });
-  }
-});
-
-// Save draft 4C activities endpoint
-router.put('/:id/draft-activities', async (req, res) => {
-  try {
-    const { id: sessionId } = req.params;
-    const { content } = req.body;
-
-    const { data, error } = await supabase
-      .from('sessions')
-      .update({ draft_ai_activities: content })
-      .eq('id', sessionId)
-      .select()
-      .single();
-
-    if (error) {
-      console.error('[API] Error saving draft activities:', error);
-      return res.status(400).json({ success: false, error: error.message });
-    }
-
-    res.json({ success: true, data });
-  } catch (error) {
-    console.error('[API] Draft activities save error:', error);
-    res.status(500).json({ success: false, error: (error as Error).message });
-  }
-});
-
-// Lock IBOs endpoint - creates actual IBO entities from draft content
-router.post('/:id/lock-ibos', async (req, res) => {
-  try {
-    const { id: sessionId } = req.params;
-    const { iboContent } = req.body;
-
-    // Update session to mark IBOs as locked
-    const { data, error } = await supabase
-      .from('sessions')
-      .update({ 
-        ibo_locked: true,
-        draft_ai_ibos: iboContent 
-      })
-      .eq('id', sessionId)
-      .select()
-      .single();
-
-    if (error) {
-      console.error('[API] Error locking IBOs:', error);
-      return res.status(400).json({ success: false, error: error.message });
-    }
-
-    res.json({ success: true, data });
-  } catch (error) {
-    console.error('[API] IBO lock error:', error);
-    res.status(500).json({ success: false, error: (error as Error).message });
-  }
-});
-
-// Unlock IBOs endpoint
-router.post('/:id/unlock-ibos', async (req, res) => {
-  try {
-    const { id: sessionId } = req.params;
-
-    const { data, error } = await supabase
-      .from('sessions')
-      .update({ 
-        ibo_locked: false,
-        locked_ibo_ids: null 
-      })
-      .eq('id', sessionId)
-      .select()
-      .single();
-
-    if (error) {
-      console.error('[API] Error unlocking IBOs:', error);
-      return res.status(400).json({ success: false, error: error.message });
-    }
-
-    res.json({ success: true, data });
-  } catch (error) {
-    console.error('[API] IBO unlock error:', error);
-    res.status(500).json({ success: false, error: (error as Error).message });
   }
 });
 

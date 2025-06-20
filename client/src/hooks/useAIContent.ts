@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { apiRequest } from '@/lib/queryClient';
-import { saveDraftIBOs, saveDraft4C } from '@/lib/api';
+import * as api from '@/lib/api';
 
 interface AIContentState {
   generatedIBOs: string | null;
@@ -8,7 +8,7 @@ interface AIContentState {
   generatedActivities: string | null;
   isGenerating: boolean;
   error: string | null;
-  isLoaded: boolean;
+  isLoaded: boolean; // Track if we've loaded from database
 }
 
 export const useAIContent = (sessionId: string | null) => {
@@ -21,133 +21,107 @@ export const useAIContent = (sessionId: string | null) => {
     isLoaded: false
   });
 
-  // Load persisted AI content from database when sessionId changes
+  // Load saved draft content on mount
   useEffect(() => {
-    const loadPersistedContent = async () => {
-      if (!sessionId) return;
-
+    const loadDraftContent = async () => {
+      if (!sessionId || aiContent.isLoaded) return;
+      
       try {
-        const response = await fetch(`/api/sessions/${sessionId}`);
-        const sessionData = await response.json();
+        const session = await api.getSession(sessionId);
+        const updates: Partial<AIContentState> = { isLoaded: true };
         
-        if (sessionData.data) {
-          const session = sessionData.data;
-          setAIContent(prev => ({
-            ...prev,
-            generatedIBOs: session.draft_ai_ibos || null,
-            refinedIBOs: session.draft_ai_ibos || null, // Start with generated content
-            generatedActivities: session.draft_ai_activities || null
-          }));
+        if (session.draft_ai_ibos) {
+          updates.generatedIBOs = session.draft_ai_ibos;
+          updates.refinedIBOs = session.draft_ai_ibos;
         }
+        
+        if (session.draft_ai_activities) {
+          updates.generatedActivities = session.draft_ai_activities;
+        }
+        
+        setAIContent(prev => ({ ...prev, ...updates }));
       } catch (error) {
-        console.error('Failed to load persisted AI content:', error);
+        console.error('Failed to load draft content:', error);
+        setAIContent(prev => ({ ...prev, isLoaded: true }));
       }
     };
-
-    loadPersistedContent();
-  }, [sessionId]);
+    
+    loadDraftContent();
+  }, [sessionId, aiContent.isLoaded]);
 
   const generateIBOs = async () => {
-    if (!sessionId) {
-      setAIContent(prev => ({ 
-        ...prev, 
-        error: 'No session ID provided' 
-      }));
-      return { success: false, error: 'No session ID provided' };
-    }
-
     setAIContent(prev => ({ ...prev, isGenerating: true, error: null }));
     
     try {
-      const response = await apiRequest(
-        'POST',
-        `/api/sessions/${sessionId}/generate-ibos`,
-        {}
-      );
-
-      const data = await response.json();
-
-      if (!data.success) {
-        throw new Error(data.error || 'Failed to generate IBOs');
-      }
-
+      const response = await api.generateIBOs(sessionId);
+      const newContent = response.content;
+      
       setAIContent(prev => ({
         ...prev,
-        generatedIBOs: data.content,
-        refinedIBOs: data.content, // Start with generated content
+        generatedIBOs: newContent,
+        refinedIBOs: newContent,
         isGenerating: false
       }));
-
+      
       // Auto-save to database as draft
-      await saveDraftIBOs(sessionId, data.content);
+      await api.saveDraftIBOs(sessionId, newContent);
       
       return { success: true };
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
       setAIContent(prev => ({
         ...prev,
         isGenerating: false,
-        error: errorMessage
+        error: error.message
       }));
-      return { success: false, error: errorMessage };
+      return { success: false, error: error.message };
     }
   };
 
   const refineIBOs = async (refinementRequest: string) => {
-    if (!sessionId || !aiContent.refinedIBOs) {
-      setAIContent(prev => ({ 
-        ...prev, 
-        error: 'No content to refine or session ID missing' 
-      }));
-      return { success: false, error: 'No content to refine or session ID missing' };
-    }
-
     setAIContent(prev => ({ ...prev, isGenerating: true, error: null }));
     
     try {
-      const response = await apiRequest(
-        'POST',
-        `/api/sessions/${sessionId}/refine-ibos`,
-        {
-          currentContent: aiContent.refinedIBOs,
-          refinementRequest: refinementRequest
-        }
-      );
-
-      const data = await response.json();
-
-      if (!data.success) {
-        throw new Error(data.error || 'Failed to refine IBOs');
-      }
-
+      const response = await api.refineIBOs(sessionId, {
+        currentContent: aiContent.refinedIBOs,
+        refinementRequest
+      });
+      
+      const refinedContent = response.content;
       setAIContent(prev => ({
         ...prev,
-        refinedIBOs: data.content,
+        refinedIBOs: refinedContent,
         isGenerating: false
       }));
 
       // Auto-save refined content to database
-      await saveDraftIBOs(sessionId, data.content);
+      await api.saveDraftIBOs(sessionId, refinedContent);
       
       return { success: true };
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
       setAIContent(prev => ({
         ...prev,
         isGenerating: false,
-        error: errorMessage
+        error: error.message
       }));
-      return { success: false, error: errorMessage };
+      return { success: false, error: error.message };
     }
   };
 
   const updateRefinedIBOs = async (content: string) => {
     setAIContent(prev => ({ ...prev, refinedIBOs: content }));
     
-    // Auto-save manual edits to database
+    // Persist manual edits to database
     if (sessionId) {
       try {
-        await saveDraftIBOs(sessionId, content);
+        await fetch(`/api/sessions/${sessionId}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            draft_ai_ibos: content
+          })
+        });
       } catch (error) {
         console.error('Failed to persist manual IBO edits:', error);
       }
@@ -157,10 +131,18 @@ export const useAIContent = (sessionId: string | null) => {
   const saveActivities = async (content: string) => {
     setAIContent(prev => ({ ...prev, generatedActivities: content }));
     
-    // Auto-save 4C activities to database
+    // Persist 4C activities to database
     if (sessionId) {
       try {
-        await saveDraft4C(sessionId, content);
+        await fetch(`/api/sessions/${sessionId}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            draft_ai_activities: content
+          })
+        });
       } catch (error) {
         console.error('Failed to persist 4C activities:', error);
       }
@@ -174,7 +156,7 @@ export const useAIContent = (sessionId: string | null) => {
       generatedActivities: null,
       isGenerating: false,
       error: null,
-      isLoaded: true
+      isLoaded: false
     });
   };
 

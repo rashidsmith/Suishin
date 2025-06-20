@@ -188,6 +188,39 @@ export const updateSessionCard = async (sessionId: string, cardId: string, updat
   return response.data.data;
 };
 
+// AI Content API functions for session builder
+export const getSession = async (sessionId: string) => {
+  const response = await api.get(`/sessions/${sessionId}`);
+  return response.data.data;
+};
+
+export const generateIBOs = async (sessionId: string) => {
+  const response = await api.post(`/sessions/${sessionId}/generate-ibos`);
+  return response.data;
+};
+
+export const refineIBOs = async (sessionId: string, data: {
+  currentContent: string;
+  refinementRequest: string;
+}) => {
+  const response = await api.post(`/sessions/${sessionId}/refine-ibos`, data);
+  return response.data;
+};
+
+export const saveDraftIBOs = async (sessionId: string, content: string) => {
+  const response = await api.put(`/sessions/${sessionId}`, {
+    draft_ai_ibos: content
+  });
+  return response.data;
+};
+
+export const saveDraftActivities = async (sessionId: string, content: string) => {
+  const response = await api.put(`/sessions/${sessionId}`, {
+    draft_ai_activities: content
+  });
+  return response.data;
+};
+
 // Performance Metrics API functions
 export const fetchPerformanceMetricsByIBO = async (iboId: string) => {
   try {
@@ -342,53 +375,6 @@ export const deletePersona = async (id: string): Promise<void> => {
     await api.delete(`/personas/${id}`);
   } catch (error) {
     console.error('Error deleting persona:', error);
-    throw error;
-  }
-};
-
-// AI Content Draft API functions
-export const saveDraftIBOs = async (sessionId: string, content: string) => {
-  try {
-    const response = await api.put(`/sessions/${sessionId}/draft-ibos`, {
-      content
-    });
-    return response.data;
-  } catch (error) {
-    console.error('Error saving draft IBOs:', error);
-    throw error;
-  }
-};
-
-export const saveDraft4C = async (sessionId: string, content: string) => {
-  try {
-    const response = await api.put(`/sessions/${sessionId}/draft-activities`, {
-      content
-    });
-    return response.data;
-  } catch (error) {
-    console.error('Error saving draft 4C activities:', error);
-    throw error;
-  }
-};
-
-export const lockIBOs = async (sessionId: string, iboContent: string) => {
-  try {
-    const response = await api.post(`/sessions/${sessionId}/lock-ibos`, {
-      iboContent
-    });
-    return response.data;
-  } catch (error) {
-    console.error('Error locking IBOs:', error);
-    throw error;
-  }
-};
-
-export const unlockIBOs = async (sessionId: string) => {
-  try {
-    const response = await api.post(`/sessions/${sessionId}/unlock-ibos`);
-    return response.data;
-  } catch (error) {
-    console.error('Error unlocking IBOs:', error);
     throw error;
   }
 };
