@@ -37,7 +37,7 @@ export default function SupabaseTest() {
 
     // Test server-side health check
     try {
-      const serverResult = await apiClient.get('/health');
+      const serverResult = await apiClient.get('/health') as any;
       if (serverResult.status === 'ok' && serverResult.database === 'connected') {
         setServerConnectionStatus('connected');
       } else {
