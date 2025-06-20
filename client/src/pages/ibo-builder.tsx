@@ -74,7 +74,17 @@ export default function IBOBuilder() {
 
   useEffect(() => {
     loadIBOs();
-  }, [loadIBOs]);
+    loadPersonas();
+  }, [loadIBOs, loadPersonas]);
+
+  // Filter IBOs based on selected persona and topic
+  const filteredIBOs = ibos.filter(ibo => {
+    const personaMatch = selectedPersonaId === 'all' || 
+                        (selectedPersonaId === 'generic' && !ibo.persona_id) ||
+                        (ibo.persona_id === selectedPersonaId);
+    const topicMatch = !topicFilter || ibo.topic?.toLowerCase().includes(topicFilter.toLowerCase());
+    return personaMatch && topicMatch;
+  });
 
   // Function to save Performance Metrics and Observable Behaviors to database
   const savePerformanceMetricsToDatabase = async (iboId: string, performanceMetrics: PerformanceMetric[]) => {
@@ -146,6 +156,8 @@ export default function IBOBuilder() {
       wiifmIndividual: '',
       wiifmOrganization: '',
       description: '',
+      persona_id: '',
+      topic: '',
       performanceMetrics: []
     });
     setEditingIBO(null);
@@ -163,6 +175,8 @@ export default function IBOBuilder() {
       wiifmIndividual: ibo.wiifm_individual || '',
       wiifmOrganization: ibo.wiifm_org || '',
       description: ibo.description || '',
+      persona_id: ibo.persona_id || '',
+      topic: ibo.topic || '',
       performanceMetrics: []
     });
     
@@ -183,12 +197,14 @@ export default function IBOBuilder() {
     try {
       const iboData = {
         title: formData.title,
-        description: formData.description
+        description: formData.description,
+        persona_id: formData.persona_id || undefined,
+        topic: formData.topic
       };
 
       let savedIBO;
       if (view === 'create') {
-        savedIBO = await createIBO(formData.title, formData.description);
+        savedIBO = await createIBO(iboData);
       } else if (editingIBO) {
         savedIBO = await updateIBO(editingIBO.id, iboData);
       }
@@ -383,6 +399,38 @@ export default function IBOBuilder() {
           </Button>
         </div>
 
+        {/* Filters */}
+        <div className="mb-6 p-4 bg-white rounded-lg border border-gray-200">
+          <div className="flex flex-col md:flex-row gap-4">
+            <div className="flex-1">
+              <Label htmlFor="persona-filter">Filter by Persona</Label>
+              <Select value={selectedPersonaId} onValueChange={setSelectedPersonaId}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select persona" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Personas</SelectItem>
+                  <SelectItem value="generic">Generic (Reusable)</SelectItem>
+                  {personas.map(persona => (
+                    <SelectItem key={persona.id} value={persona.id}>
+                      {persona.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="flex-1">
+              <Label htmlFor="topic-filter">Filter by Topic</Label>
+              <Input
+                id="topic-filter"
+                placeholder="Search topics..."
+                value={topicFilter}
+                onChange={(e) => setTopicFilter(e.target.value)}
+              />
+            </div>
+          </div>
+        </div>
+
         {/* Error Alert */}
         {error && (
           <Alert className="mb-6 bg-red-50 border-red-200">
@@ -402,19 +450,21 @@ export default function IBOBuilder() {
 
         {/* IBOs Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {loading && ibos.length === 0 ? (
+          {loading && filteredIBOs.length === 0 ? (
             <div className="col-span-full text-center py-12">
               <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4 text-blue-600" />
               <p className="text-gray-600">Loading IBOs...</p>
             </div>
-          ) : ibos.length === 0 ? (
+          ) : filteredIBOs.length === 0 ? (
             <div className="col-span-full text-center py-12">
               <BookOpen className="w-12 h-12 mx-auto mb-4 text-gray-400" />
               <p className="text-gray-600 text-lg mb-2">No IBOs found</p>
-              <p className="text-gray-500">Create your first IBO to get started!</p>
+              <p className="text-gray-500">
+                {selectedPersonaId !== 'all' || topicFilter ? 'Try adjusting your filters' : 'Create your first IBO to get started!'}
+              </p>
             </div>
           ) : (
-            ibos.map((ibo) => (
+            filteredIBOs.map((ibo) => (
               <Card key={ibo.id} className="bg-white hover:shadow-md transition-shadow">
                 <CardHeader className="pb-3">
                   <CardTitle className="text-lg font-semibold text-gray-900">
