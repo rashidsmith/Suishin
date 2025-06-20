@@ -6,6 +6,7 @@ import { getSchemaInfo } from "./routes/schema-info";
 import { setupDatabase } from "./routes/db-setup";
 import iboRoutes from "./routes/iboRoutes";
 import cardRoutes from "./routes/cardRoutes";
+import sessionRoutes from "./routes/sessionRoutes";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // put application routes here
@@ -25,6 +26,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Add Card routes
   app.use("/api/cards", cardRoutes);
+
+  // Add Session routes
+  app.use("/api/sessions", sessionRoutes);
 
   // use storage to perform CRUD operations on the storage interface
   // e.g. storage.insertUser(user) or storage.getUserByUsername(username)
