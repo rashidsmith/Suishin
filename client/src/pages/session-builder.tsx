@@ -74,18 +74,7 @@ export default function SessionBuilder() {
   const [generatedContent, setGeneratedContent] = useState<AIGenerationResponse | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
 
-  const steps: { id: BuilderStep; title: string; description: string; icon: any }[] = [
-    { id: 'persona', title: 'Select Persona', description: 'Choose target audience', icon: Users },
-    { id: 'topic-goals', title: 'Topic & Goals', description: 'Define focus and outcomes', icon: Target },
-    { id: 'modality', title: 'Delivery Mode', description: 'Choose format', icon: Settings },
-    { id: 'ai-generation', title: 'AI Generation', description: 'Generate content', icon: Wand2 },
-    { id: 'cards', title: '4C Structure', description: 'Design learning flow', icon: CreditCard },
-    { id: 'review', title: 'Review & Create', description: 'Finalize session', icon: Check },
-  ];
-
-  const getStepIndex = (step: BuilderStep) => steps.findIndex(s => s.id === step);
-  const getCurrentStepIndex = () => getStepIndex(currentStep);
-  const getProgressPercentage = () => ((getCurrentStepIndex() + 1) / steps.length) * 100;
+  // Using SESSION_STEPS from shared/sessionSteps.ts for step navigation
 
   useEffect(() => {
     const loadData = async () => {
@@ -182,46 +171,30 @@ export default function SessionBuilder() {
     });
     setEditingSession(null);
     setFormErrors({});
-    setCurrentStep('persona');
+    setSessionId(null);
   };
 
-  const handleCreateNew = () => {
+  const handleCreateNew = async () => {
     resetForm();
+    // Create a new session to enable step navigation
+    try {
+      const newSession = await createSession({
+        title: 'New Session',
+        persona_id: '',
+        topic: '',
+        modality: 'virtual',
+        business_goals: '',
+        current_step: 'persona'
+      });
+      setSessionId(newSession.id);
+      setEditingSession(newSession);
+    } catch (error) {
+      console.error('Error creating session:', error);
+    }
     setView('create');
   };
 
-  const canProceedToNextStep = () => {
-    switch (currentStep) {
-      case 'persona':
-        return formData.persona_id !== '';
-      case 'topic-goals':
-        return formData.topic.trim() !== '' && formData.business_goals.trim() !== '';
-      case 'modality':
-        return formData.modality !== '';
-      case 'ai-generation':
-        return generatedContent !== null;
-      case 'cards':
-        return formData.cardIds.length > 0;
-      case 'review':
-        return formData.title.trim() !== '';
-      default:
-        return false;
-    }
-  };
-
-  const handleNextStep = () => {
-    const currentIndex = getCurrentStepIndex();
-    if (currentIndex < steps.length - 1) {
-      setCurrentStep(steps[currentIndex + 1].id);
-    }
-  };
-
-  const handlePrevStep = () => {
-    const currentIndex = getCurrentStepIndex();
-    if (currentIndex > 0) {
-      setCurrentStep(steps[currentIndex - 1].id);
-    }
-  };
+  // Step navigation handled by useSessionSteps hook
 
   const generateSessionStructure = async () => {
     const selectedPersona = personas.find(p => p.id === formData.persona_id);
@@ -321,7 +294,7 @@ export default function SessionBuilder() {
       cardIds: []
     });
     setEditingSession(session);
-    setCurrentStep('persona');
+    setSessionId(session.id);
     setView('edit');
   };
 
@@ -435,31 +408,14 @@ export default function SessionBuilder() {
 
       {(view === 'create' || view === 'edit') && (
         <div className="space-y-6">
-          {/* Progress Bar */}
-          <Card>
-            <CardContent className="pt-6">
-              <div className="space-y-4">
-                <div className="flex justify-between items-center">
-                  <h2 className="text-lg font-semibold">Step {getCurrentStepIndex() + 1} of {steps.length}</h2>
-                  <span className="text-sm text-muted-foreground">{Math.round(getProgressPercentage())}% Complete</span>
-                </div>
-                <Progress value={getProgressPercentage()} className="w-full" />
-                <div className="flex justify-between text-xs text-muted-foreground">
-                  {steps.map((step, index) => {
-                    const Icon = step.icon;
-                    const isActive = step.id === currentStep;
-                    const isCompleted = getStepIndex(step.id) < getCurrentStepIndex();
-                    return (
-                      <div key={step.id} className={`flex flex-col items-center space-y-1 ${isActive ? 'text-blue-600' : isCompleted ? 'text-green-600' : 'text-gray-400'}`}>
-                        <Icon className="w-4 h-4" />
-                        <span className="hidden sm:block">{step.title}</span>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+          {/* Step Progress Bar */}
+          <StepProgressBar
+            currentStepIndex={stepNavigation.currentStepIndex}
+            completedSteps={stepNavigation.session?.completed_steps || []}
+            onStepClick={stepNavigation.updateStep}
+            canAdvanceToStep={stepNavigation.canAdvanceToStep}
+            isStepComplete={stepNavigation.isStepComplete}
+          />
 
           {/* Step Content */}
           {currentStep === 'persona' && renderPersonaStep()}
@@ -475,26 +431,25 @@ export default function SessionBuilder() {
               <div className="flex justify-between">
                 <Button
                   variant="outline"
-                  onClick={handlePrevStep}
-                  disabled={getCurrentStepIndex() === 0}
+                  onClick={stepNavigation.goToPreviousStep}
+                  disabled={stepNavigation.currentStepIndex === 0}
                 >
                   <ArrowLeft className="w-4 h-4 mr-2" />
                   Previous
                 </Button>
                 
                 <div className="space-x-2">
-                  {getCurrentStepIndex() === steps.length - 1 ? (
+                  {currentStep === 'review' ? (
                     <Button
                       onClick={handleSaveSession}
-                      disabled={!canProceedToNextStep() || saving}
+                      disabled={saving}
                     >
                       {saving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}
                       Create Session
                     </Button>
                   ) : (
                     <Button
-                      onClick={handleNextStep}
-                      disabled={!canProceedToNextStep()}
+                      onClick={stepNavigation.goToNextStep}
                     >
                       Next
                       <ArrowRight className="w-4 h-4 ml-2" />
