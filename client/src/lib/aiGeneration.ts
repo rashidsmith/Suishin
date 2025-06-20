@@ -139,17 +139,25 @@ export const createIBOsFromGenerated = async (generatedIBOs: GeneratedIBO[], per
   
   for (const iboData of generatedIBOs) {
     try {
-      const response = await apiRequest('/api/ibos', {
+      const response = await fetch('/api/ibos', {
         method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
         body: JSON.stringify({
           title: iboData.title,
           description: iboData.description,
           topic: iboData.topic,
           persona_id: personaId,
           user_id: userId
-        })
+        }),
+        credentials: 'include'
       });
-      createdIBOs.push(response);
+      
+      if (response.ok) {
+        const result = await response.json();
+        createdIBOs.push(result.data);
+      }
     } catch (error) {
       console.error('Error creating IBO:', error);
     }
@@ -167,8 +175,11 @@ export const createCardsFromGenerated = async (
   for (let i = 0; i < generatedActivities.length; i++) {
     const activity = generatedActivities[i];
     try {
-      const response = await apiRequest('/api/cards', {
+      const response = await fetch('/api/cards', {
         method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
         body: JSON.stringify({
           title: activity.title,
           content: activity.description,
@@ -181,9 +192,14 @@ export const createCardsFromGenerated = async (
             considerations: activity.considerations || [],
             ai_generated: true
           }
-        })
+        }),
+        credentials: 'include'
       });
-      createdCards.push(response);
+      
+      if (response.ok) {
+        const result = await response.json();
+        createdCards.push(result.data);
+      }
     } catch (error) {
       console.error('Error creating card:', error);
     }

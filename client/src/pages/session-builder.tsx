@@ -9,10 +9,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Plus, BookOpen, Trash2, Users, Target, Settings, CreditCard, Check, ArrowLeft, ArrowRight, Save, Loader2 } from "lucide-react";
+import { Plus, BookOpen, Trash2, Users, Target, Settings, CreditCard, Check, ArrowLeft, ArrowRight, Save, Loader2, Wand2, Brain, Lightbulb } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Progress } from "@/components/ui/progress";
+import { generateSessionContent, type AIGenerationRequest, type AIGenerationResponse } from "../lib/aiGeneration";
 
 interface SessionFormData {
   title: string;
@@ -23,7 +24,7 @@ interface SessionFormData {
   cardIds: string[];
 }
 
-type BuilderStep = 'persona' | 'topic-goals' | 'modality' | 'cards' | 'review';
+type BuilderStep = 'persona' | 'topic-goals' | 'modality' | 'ai-generation' | 'cards' | 'review';
 
 export default function SessionBuilder() {
   const { cards, loading: cardsLoading, error: cardsError, loadCards } = useCardStore();
@@ -62,11 +63,14 @@ export default function SessionBuilder() {
   const [saving, setSaving] = useState(false);
   const [formErrors, setFormErrors] = useState<{[key: string]: string}>({});
   const [filteredIBOs, setFilteredIBOs] = useState<any[]>([]);
+  const [generatedContent, setGeneratedContent] = useState<AIGenerationResponse | null>(null);
+  const [isGenerating, setIsGenerating] = useState(false);
 
   const steps: { id: BuilderStep; title: string; description: string; icon: any }[] = [
     { id: 'persona', title: 'Select Persona', description: 'Choose target audience', icon: Users },
     { id: 'topic-goals', title: 'Topic & Goals', description: 'Define focus and outcomes', icon: Target },
     { id: 'modality', title: 'Delivery Mode', description: 'Choose format', icon: Settings },
+    { id: 'ai-generation', title: 'AI Generation', description: 'Generate content', icon: Wand2 },
     { id: 'cards', title: '4C Structure', description: 'Design learning flow', icon: CreditCard },
     { id: 'review', title: 'Review & Create', description: 'Finalize session', icon: Check },
   ];
@@ -186,6 +190,8 @@ export default function SessionBuilder() {
         return formData.topic.trim() !== '' && formData.business_goals.trim() !== '';
       case 'modality':
         return formData.modality !== '';
+      case 'ai-generation':
+        return generatedContent !== null;
       case 'cards':
         return formData.cardIds.length > 0;
       case 'review':
@@ -206,6 +212,51 @@ export default function SessionBuilder() {
     const currentIndex = getCurrentStepIndex();
     if (currentIndex > 0) {
       setCurrentStep(steps[currentIndex - 1].id);
+    }
+  };
+
+  const generateSessionStructure = async () => {
+    const selectedPersona = personas.find(p => p.id === formData.persona_id);
+    if (!selectedPersona) {
+      toast({
+        title: "Error",
+        description: "Please select a persona first",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsGenerating(true);
+    try {
+      const request: AIGenerationRequest = {
+        persona: {
+          name: selectedPersona.name,
+          description: selectedPersona.description,
+          context: selectedPersona.context,
+          experience: selectedPersona.experience,
+          motivations: selectedPersona.motivations,
+          constraints: selectedPersona.constraints,
+        },
+        topic: formData.topic,
+        modality: formData.modality,
+        businessGoals: formData.business_goals,
+      };
+
+      const generated = await generateSessionContent(request);
+      setGeneratedContent(generated);
+      
+      toast({
+        title: "Success",
+        description: "Session structure generated successfully!",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to generate session structure",
+        variant: "destructive",
+      });
+    } finally {
+      setIsGenerating(false);
     }
   };
 
@@ -406,6 +457,7 @@ export default function SessionBuilder() {
           {currentStep === 'persona' && renderPersonaStep()}
           {currentStep === 'topic-goals' && renderTopicGoalsStep()}
           {currentStep === 'modality' && renderModalityStep()}
+          {currentStep === 'ai-generation' && renderAIGenerationStep()}
           {currentStep === 'cards' && renderCardsStep()}
           {currentStep === 'review' && renderReviewStep()}
 
@@ -696,7 +748,135 @@ export default function SessionBuilder() {
     );
   }
 
-  // Step 5: Review & Create
+  // Step 4: AI Generation
+  function renderAIGenerationStep() {
+    const selectedPersona = personas.find(p => p.id === formData.persona_id);
+
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Wand2 className="w-5 h-5" />
+            AI-Powered Content Generation
+          </CardTitle>
+          <p className="text-muted-foreground">Generate persona-aware IBOs and 4C activity structure</p>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {!generatedContent ? (
+            <div className="text-center space-y-4">
+              <div className="p-4 bg-blue-50 rounded-lg">
+                <Brain className="w-12 h-12 mx-auto mb-3 text-blue-600" />
+                <h3 className="text-lg font-semibold mb-2">Ready to Generate Session Structure</h3>
+                <p className="text-sm text-gray-600 mb-4">
+                  AI will create tailored IBOs and 4C activities based on your persona, topic, and modality selections.
+                </p>
+                <div className="space-y-2 text-sm text-left">
+                  <div><strong>Persona:</strong> {selectedPersona?.name}</div>
+                  <div><strong>Topic:</strong> {formData.topic}</div>
+                  <div><strong>Modality:</strong> {formData.modality}</div>
+                  <div><strong>Business Goals:</strong> {formData.business_goals}</div>
+                </div>
+              </div>
+              
+              <Button
+                onClick={generateSessionStructure}
+                disabled={isGenerating}
+                className="w-full"
+                size="lg"
+              >
+                {isGenerating ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Generating Session Structure...
+                  </>
+                ) : (
+                  <>
+                    <Wand2 className="w-4 h-4 mr-2" />
+                    Generate Session Structure
+                  </>
+                )}
+              </Button>
+            </div>
+          ) : (
+            <div className="space-y-6">
+              <div className="flex items-center justify-between">
+                <h3 className="text-lg font-semibold text-green-700">Session Structure Generated!</h3>
+                <Button
+                  variant="outline"
+                  onClick={() => setGeneratedContent(null)}
+                  size="sm"
+                >
+                  Regenerate
+                </Button>
+              </div>
+
+              {/* Generated IBOs */}
+              <div>
+                <h4 className="font-semibold mb-3 flex items-center gap-2">
+                  <Target className="w-4 h-4" />
+                  Generated IBOs ({generatedContent.ibos.length})
+                </h4>
+                <div className="space-y-2">
+                  {generatedContent.ibos.map((ibo, index) => (
+                    <div key={index} className="p-3 bg-green-50 rounded border-l-4 border-green-400">
+                      <div className="font-medium text-green-900">{ibo.title}</div>
+                      <div className="text-sm text-green-700 mt-1">{ibo.description}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Generated 4C Activities */}
+              <div>
+                <h4 className="font-semibold mb-3 flex items-center gap-2">
+                  <CreditCard className="w-4 h-4" />
+                  Generated 4C Activities ({generatedContent.activities.length})
+                </h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  {generatedContent.activities.map((activity, index) => (
+                    <div key={index} className="p-3 bg-blue-50 rounded border">
+                      <div className="flex items-center gap-2 mb-2">
+                        <div className={`w-3 h-3 rounded-full ${
+                          activity.type === 'connection' ? 'bg-yellow-400' :
+                          activity.type === 'concept' ? 'bg-blue-400' :
+                          activity.type === 'concrete_practice' ? 'bg-green-400' :
+                          'bg-purple-400'
+                        }`} />
+                        <span className="font-medium text-sm capitalize">
+                          {activity.type.replace('_', ' ')}
+                        </span>
+                        <span className="text-xs text-gray-500">
+                          {activity.estimated_duration}min
+                        </span>
+                      </div>
+                      <div className="font-medium text-blue-900">{activity.title}</div>
+                      <div className="text-sm text-blue-700 mt-1">{activity.description}</div>
+                      {activity.materials && activity.materials.length > 0 && (
+                        <div className="text-xs text-gray-600 mt-2">
+                          <strong>Materials:</strong> {activity.materials.join(', ')}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* AI Rationale */}
+              <div className="p-4 bg-gray-50 rounded-lg">
+                <h4 className="font-semibold mb-2 flex items-center gap-2">
+                  <Lightbulb className="w-4 h-4" />
+                  AI Design Rationale
+                </h4>
+                <p className="text-sm text-gray-700">{generatedContent.rationale}</p>
+              </div>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    );
+  }
+
+  // Step 6: Review & Create
   function renderReviewStep() {
     const selectedPersona = personas.find(p => p.id === formData.persona_id);
     const selectedCards = cards.filter(c => formData.cardIds.includes(c.id));
@@ -726,6 +906,7 @@ export default function SessionBuilder() {
             <div><strong>Topic:</strong> {formData.topic}</div>
             <div><strong>Modality:</strong> {formData.modality}</div>
             <div><strong>Business Goals:</strong> {formData.business_goals}</div>
+            <div><strong>Generated Content:</strong> {generatedContent ? 'Yes' : 'No'}</div>
             <div><strong>Cards:</strong> {selectedCards.length} selected</div>
           </div>
         </CardContent>
